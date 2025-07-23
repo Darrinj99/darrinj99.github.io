@@ -69,7 +69,7 @@
 
   <h3>Development</h3>
   <p>
-    I began by setting up the Raspberry Pi 3 with a hardened Linux environment using Xubuntu as a lightweight and familiar base. A Python-based backend was written to accept incoming beacons, track device identifiers, and store status updates to a local database. A simple internal CLI was built to query and interact with the endpoint list — designed to simulate how operators manage multiple infected hosts in real-world engagements.
+    I began by setting up the Raspberry Pi 3 with a hardened Linux environment using Xubuntu as a lightweight and familiar base. A Python-based backend was written to accept incoming beacons, track device identifiers, and store status updates to a local database. A simple internal CLI was built to query and interact with the endpoint list, designed to simulate how operators manage multiple infected hosts in real-world engagements.
   </p>
   <p>
     Client-side scripts were prototyped to simulate compromised machines. These scripts used scheduled HTTP(S) requests to report in with identifying metadata, mimic command polling behavior, and handle simple task responses. To simulate OPSEC-conscious infrastructure, the system avoids unsolicited outbound connections and uses randomized beacon intervals and minimal traffic signatures.
