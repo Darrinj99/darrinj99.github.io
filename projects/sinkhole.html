@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PAGE TITLE | Darrin Jackson</title>
+  <title>DNS Sinkhole | Darrin Jackson</title>
  <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
   <style>
     @font-face {
@@ -72,13 +72,13 @@
     I began by installing a headless Raspberry Pi OS (Lite) on the Pi 3 and configured secure remote access via SSH using key-based authentication. Once networking was stable, I installed Pi-hole through its official installation script, which allowed me to configure upstream DNS to <strong>Cloudflare</strong> and <strong>Quad9</strong> for privacy and malware filtering, respectively. I hardened the Pi by disabling root login, removing unnecessary packages, setting a static IP reservation, and ensuring minimal exposed services.
   </p>
   <!-- Dashboard -->
-  <img src="/Images/dashboard.png" alt="Pi-hole Admin Dashboard" style="width:100%; margin-top: 1.5rem; border: 1px solid #333; border-radius: 8px;">
+  <img src="/images/dashboard.png" alt="Pi-hole Admin Dashboard" style="width:100%; margin-top: 1.5rem; border: 1px solid #333; border-radius: 8px;">
     
   <p>
     I then integrated multiple curated blocklists and added custom rules for domains known to be associated with telemetry and tracking. For encrypted DNS, I configured Pi-hole to route queries through <strong>dnscrypt-proxy</strong>, preventing ISP-level sniffing of DNS traffic.
   </p>
   <!-- Blocklist -->
-  <img src="/Images/blocklist.png" alt="Pi-hole Blocklist" style="width:100%; margin-top: 1.5rem; border: 1px solid #333; border-radius: 8px;">
+  <img src="/images/blocklist.png" alt="Pi-hole Blocklist" style="width:100%; margin-top: 1.5rem; border: 1px solid #333; border-radius: 8px;">
     
   <p>
     To validate its functionality, I conducted a series of test queries from client machines, confirmed sinkhole redirects using `dig` and `nslookup`, and reviewed Pi-hole's logs for DNS resolution patterns. I enabled Pi-hole’s query logging and long-term database features to allow for persistent insight across devices.
