@@ -59,8 +59,28 @@
   <main>
 <h2>DNS Sinkhole</h2>
 
-<p>Under Construction: More content coming soon</p>
+<!-- Screenshots of Pi-hole dashboard 
+<img src="/images/pi-hole-dashboard.png" alt="Pi-hole Admin Dashboard" style="width:100%; margin-top: 1.5rem; border: 1px solid #333; border-radius: 8px;">
+-->
+<p>
+This project involved deploying <strong>Pi-hole</strong> on a Raspberry Pi 3 to act as a <em>DNS sinkhole</em> for network-level ad and telemetry blocking. I configured the Pi-hole to operate as the default DNS resolver for all devices on the home network, intercepting and rejecting DNS queries to known malicious or tracking domains.
+</p>
 
+<p>
+The setup process included configuring static IP assignments, forwarding DNS queries through DNS-over-HTTPS using Cloudflare, and customizing blocklists for privacy and threat intelligence. I also implemented logging and dashboard access for real-time monitoring of DNS activity, allowing me to observe telemetry behavior across a range of devices including PCs, phones, smart TVs, and IoT hardware.
+</p>
+
+<p>
+This project helped reinforce practical understanding of DNS traffic, passive network defense, and device fingerprinting through DNS metadata. It also served as a launching point for experimenting with custom firewall rules and future plans for recursive DNS configurations or blackhole routing.
+</p>
+
+<!-- Example code block
+<pre><code>
+# Basic Pi-hole install on Raspberry Pi OS
+curl -sSL https://install.pi-hole.net | bash
+</code></pre>
+-->
+    
   </main>
   <footer>
     &copy; 2025 Darrin Jackson
