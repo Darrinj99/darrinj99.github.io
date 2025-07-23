@@ -59,12 +59,9 @@
   <main>
 <h2>DNS Sinkhole</h2>
 
-<!-- Screenshots of Pi-hole dashboard 
-<img src="/images/pi-hole-dashboard.png" alt="Pi-hole Admin Dashboard" style="width:100%; margin-top: 1.5rem; border: 1px solid #333; border-radius: 8px;">
--->
   <h3>Design</h3>
   <p>
-    The objective of this project was to deploy a DNS sinkhole on a Raspberry Pi 3 to intercept, block, and monitor domain requests at the network level. I chose <strong>Pi-hole</strong> as the primary tool due to its open-source community support and its ability to serve as a lightweight, recursive DNS server with a configurable blocklist engine. The intended use-case was full-network telemetry and privacy enforcement to simulate the kinds of passive network controls seen in small enterprise or lab environments.
+    The objective of this project was to deploy a DNS sinkhole on a Raspberry Pi 3 to intercept, block, and monitor domain requests at the network level. I chose <strong>Pi-hole</strong> as the primary tool due to its open-source community support and its ability to serve as a lightweight, recursive DNS server with a configurable blocklist engine. The intended use case was full-network telemetry and privacy enforcement to simulate the kinds of passive network controls seen in small enterprise or lab environments.
   </p>
   <p>
     By intercepting DNS queries before they resolve externally, a sinkhole provides both insight and control over outbound traffic. It becomes a choke point where unwanted domains (ads, telemetry, malware callbacks) can be blackholed or redirected, effectively creating a zero-trust barrier at the DNS level. This design aligns with real-world defensive practices such as domain-based indicators of compromise (IOCs), encrypted DNS enforcement, and passive reconnaissance.
@@ -72,22 +69,29 @@
 
   <h3>Development</h3>
   <p>
-    I began by installing a headless Raspberry Pi OS (Lite) on the Pi 3 and configured secure remote access via SSH using key-based authentication. Once networking was stable, I installed Pi-hole through its official installation script, which allowed me to configure upstream DNS to <strong>Cloudflare</strong> and <strong>Quad9</strong> for privacy and malware filtering respectively. I hardened the Pi by disabling root login, removing unnecessary packages, setting a static IP reservation, and ensuring minimal exposed services.
+    I began by installing a headless Raspberry Pi OS (Lite) on the Pi 3 and configured secure remote access via SSH using key-based authentication. Once networking was stable, I installed Pi-hole through its official installation script, which allowed me to configure upstream DNS to <strong>Cloudflare</strong> and <strong>Quad9</strong> for privacy and malware filtering, respectively. I hardened the Pi by disabling root login, removing unnecessary packages, setting a static IP reservation, and ensuring minimal exposed services.
   </p>
+  <!-- Dashboard -->
+  <img src="/images/dashboard.png" alt="Pi-hole Admin Dashboard" style="width:100%; margin-top: 1.5rem; border: 1px solid #333; border-radius: 8px;">
+    
   <p>
-    I then integrated multiple curated blocklists including <em>Energized Protection</em> and <em>Steven Black’s hosts file</em>, and added custom rules for domains known to be associated with telemetry and tracking. For encrypted DNS, I configured Pi-hole to route queries through <strong>dnscrypt-proxy</strong>, preventing ISP-level sniffing of DNS traffic.
+    I then integrated multiple curated blocklists and added custom rules for domains known to be associated with telemetry and tracking. For encrypted DNS, I configured Pi-hole to route queries through <strong>dnscrypt-proxy</strong>, preventing ISP-level sniffing of DNS traffic.
   </p>
+  <!-- Blocklist -->
+  <img src="/images/blocklist.png" alt="Pi-hole Blocklist" style="width:100%; margin-top: 1.5rem; border: 1px solid #333; border-radius: 8px;">
+    
   <p>
     To validate its functionality, I conducted a series of test queries from client machines, confirmed sinkhole redirects using `dig` and `nslookup`, and reviewed Pi-hole's logs for DNS resolution patterns. I enabled Pi-hole’s query logging and long-term database features to allow for persistent insight across devices.
   </p>
 
   <h3>Deployment</h3>
   <p>
-    The Pi-hole server was intially planned to connect via Ethernet but had to use Wi-fi due to restricted space for a home lab. It was then configured as the primary DNS resolver at the router level. All network traffic was forced to route DNS queries through the sinkhole, with fallback options disabled to prevent bypass. I then monitored logs for DNS behavior across workstations, mobile devices, and IoT components. Blocked requests and suspicious patterns (such as periodic telemetry pings from smart TVs and phones) were immediately evident.
+    The Pi-hole server was initially planned to connect via Ethernet, but had to use Wi-fi due to restricted space for a home lab. It was then configured as the primary DNS resolver at the router level. All network traffic was forced to route DNS queries through the sinkhole, with fallback options disabled to prevent bypass. I then monitored logs for DNS behavior across workstations, mobile devices, and IoT components. Blocked requests and suspicious patterns (such as periodic telemetry pings from smart TVs and phones) were immediately evident.
   </p>
   <p>
-    While the environment is a home network, the deployment mirrors enterprise DNS filtering practices on a small scale. From a red team perspective, it also serves as an opportunity to examine how attackers may attempt to bypass DNS inspection, and to understand how beaconing behavior can be observed passively.
+    While the environment is a home network, the deployment mirrors enterprise DNS filtering practices on a small scale. From a red team perspective, it also serves as an opportunity to examine how attackers may attempt to bypass DNS inspection and to understand how beaconing behavior can be observed passively.
   </p>
+
 
   <h3>Lessons Learned</h3>
   <ul>
