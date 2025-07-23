@@ -59,7 +59,41 @@
   <main>
 <h2>Command and Control Server</h2>
 
-<p>Under Construction: More content coming soon</p>
+  <h3>Design</h3>
+  <p>
+    This project simulates real-world adversary infrastructure by turning a Raspberry Pi 3 into a functioning Command & Control (C2) server. The design goal was to support beaconing from remote clients, centralized logging of active endpoints, and terminal-based interaction through a secure local interface. The system is intended for red team training, adversary emulation, and practicing infrastructure development within a safe, controlled lab environment.
+  </p>
+  <p>
+    At its core, the architecture follows a lightweight version of a typical C2 workflow: client systems (zombies) periodically reach out to the server over HTTP/S, retrieve instructions, and send back responses. The Raspberry Pi hosts both the beacon receiver and the operator control interface, giving me full visibility and interaction with connected clients while keeping resource usage minimal.
+  </p>
+
+  <h3>Development</h3>
+  <p>
+    I began by setting up the Raspberry Pi 3 with a hardened Linux environment using Xubuntu as a lightweight and familiar base. A Python-based backend was written to accept incoming beacons, track device identifiers, and store status updates to a local database. A simple internal CLI was built to query and interact with the endpoint list — designed to simulate how operators manage multiple infected hosts in real-world engagements.
+  </p>
+  <p>
+    Client-side scripts were prototyped to simulate compromised machines. These scripts used scheduled HTTP(S) requests to report in with identifying metadata, mimic command polling behavior, and handle simple task responses. To simulate OPSEC-conscious infrastructure, the system avoids unsolicited outbound connections and uses randomized beacon intervals and minimal traffic signatures.
+  </p>
+  <p>
+    The Pi was configured to auto-start the server on boot, listen on a designated port, and expose an internal-only web-based dashboard for monitoring. This was paired with a separate CLI tool for issuing commands, maintaining a realistic operator workflow. Logs were stored locally and encrypted using filesystem-level protections to simulate secure adversary storage.
+  </p>
+
+  <h3>Deployment</h3>
+  <p>
+    The Pi is hosted on a segmented lab network where it receives beacon traffic from local or virtual client systems. I tested the setup using virtual machines with staged payloads and simulated C2 check-ins. The system correctly parsed host IDs, logged beacon timing, and allowed for terminal interactions (such as issuing echo commands or simulated task instructions) through the internal CLI.
+  </p>
+  <p>
+    While basic in design, the deployment structure mirrors foundational C2 architecture seen in real-world malware and offensive frameworks. The Raspberry Pi form factor offers portability, making this project a useful tool for portable red team kits or adversary simulation scenarios.
+  </p>
+
+  <h3>Lessons Learned</h3>
+  <ul>
+    <li>Gained practical experience in designing beacon logic and server-client architecture.</li>
+    <li>Learned how to simulate realistic C2 infrastructure while balancing simplicity and stealth.</li>
+    <li>Practiced data handling, including logging, encryption, and operational interface development.</li>
+    <li>Understood the OPSEC considerations of C2 design, including timing, protocol choices, and minimal traffic signatures.</li>
+    <li>Strengthened skills in Python scripting, network communication, and lab-based adversary emulation.</li>
+  </ul>
 
   </main>
   <footer>
