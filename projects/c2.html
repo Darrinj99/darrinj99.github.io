@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PAGE TITLE | Darrin Jackson</title>
+  <title>C2 Server | Darrin Jackson</title>
  <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
   <style>
     @font-face {
@@ -58,6 +58,9 @@
   </header>
   <main>
 <h2>Command and Control Server</h2>
+    <p>
+      A.K.A Parasaurolophus (I've recently started nicknaming machines and projects after dinosaurs as an allusion to my childhood obsession. so if you see the name pop up in screenshots, that would be why.) 
+    </p>
 
   <h3>Design</h3>
   <p>
@@ -66,11 +69,16 @@
   <p>
     At its core, the architecture follows a lightweight version of a typical C2 workflow: client systems (zombies) periodically reach out to the server over HTTP/S, retrieve instructions, and send back responses. The Raspberry Pi hosts both the beacon receiver and the operator control interface, giving me full visibility and interaction with connected clients while keeping resource usage minimal.
   </p>
-
+ <!-- SSH -->
+  <img src="/images/c2_ssh.png" alt="C2 SSH" style="width:100%; margin-top: 1.5rem; border: 1px solid #333; border-radius: 8px;">
   <h3>Development</h3>
   <p>
     I began by setting up the Raspberry Pi 3 with a hardened Linux environment using Xubuntu as a lightweight and familiar base. A Python-based backend was written to accept incoming beacons, track device identifiers, and store status updates to a local database. A simple internal CLI was built to query and interact with the endpoint list, designed to simulate how operators manage multiple infected hosts in real-world engagements.
   </p>
+     <!-- Server Script -->
+  <img src="/images/c2_server_script.png" alt="C2 listening script" style="width:100%; margin-top: 1.5rem; border: 1px solid #333; border-radius: 8px;">
+ <!-- Beacon Listen -->
+  <img src="/images/beacon_listening.png" alt="CLI Beacon Listening" style="width:100%; margin-top: 1.5rem; border: 1px solid #333; border-radius: 8px;">
   <p>
     Client-side scripts were prototyped to simulate compromised machines. These scripts used scheduled HTTP(S) requests to report in with identifying metadata, mimic command polling behavior, and handle simple task responses. To simulate OPSEC-conscious infrastructure, the system avoids unsolicited outbound connections and uses randomized beacon intervals and minimal traffic signatures.
   </p>
