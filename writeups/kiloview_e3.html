@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Write-Up of Kiloview E3 Exploit | Darrin Jackson</title>
+ <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
+  <style>
+    @font-face {
+      font-family: 'Molot';
+      src: url('/fonts/molot.otf') format('opentype');
+      font-weight: normal;
+      font-style: normal;
+    }
+    body {
+      margin: 0;
+      background-color: #0a0a0a;
+      color: #e0e0e0;
+      font-family: 'Fira Code', monospace;
+    }
+    header, footer {
+      background-color: #111;
+      padding: 1rem 0;
+      text-align: center;
+    }
+    nav a {
+      color: #a962e8;
+      margin: 0 1rem;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    nav a:hover {
+      text-decoration: underline;
+    }
+    main {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+    h1, h2 {
+      font-family: 'Molot', 'Fira Code', monospace;
+      color: #a962e8;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Darrin Jackson</h1>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/projects/">Projects</a>
+      <a href="/writeups/">Writeups</a> 
+      <a href="/ctfs/">CTFs</a>
+      <a href="/certifications/">Certs</a>
+      <a href="/resume/">Resume</a>
+      <a href="/contact/">Contact</a>
+    </nav>
+  </header>
+  <main>
+<h2>Unauthenticated Factory Reset Vulnerability in Kiloview E3 Video Encoder</h2>
+<p>
+Confrmed for Software Version 1.20.0006
+</p>
+
+  <h3>Summary</h3>
+  <p>
+    An unauthenticated API endpoint on Kiloview E3 video encoders allowed remote attackers to trigger a factory reset without any credentials or prior authentication. If the device remained reachable after the reset, it was accessible via default credentials, allowing full dashboard and video feed access.
+  </p>
+   
+<h3>Timeline</h3>
+  <table border="1" cellpadding="6" cellspacing="0" style="width:100%; border-collapse: collapse; background-color:#111; color:#e0e0e0;">
+  <thead>
+    <tr style="background-color:#222;">
+      <th>Date</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>
+      Sunday, April 6th, 2025
+      </td>
+      <td>
+      Vulnerability and Exploit Discovered
+      </td>
+    </tr>
+      <tr>
+      <td>
+      Monday, April 7th, 2025
+      </td>
+      <td>
+      CVE Request sumbitted to MITRE
+      </td>
+    </tr>
+    <tr>
+      <td>
+      Monday, April 7th, 2025
+      </td>
+      <td>
+      Vulnerability and Exploit Disclosed to Vendor
+      </td>
+    </tr>
+    <tr>
+      <td>
+      Tuesday, April 8th, 2025
+      </td>
+      <td>
+      Vendor Acknowledgement and Start of Vendor Triage
+      </td>
+    </tr>
+    <tr>
+      <td>
+      Monday, July 21st, 2025
+      </td>
+      <td>
+      Vendor Patched Vulnerability
+      </td>
+    </tr>
+    <tr>
+      <td>
+      Friday, July 25th, 2025
+      </td>
+      <td>
+      Vulnerability and Exploit Publicly Disclosed
+      </td>
+    </tr>
+    <tr>
+      <td>
+      TBD
+      </td>
+      <td>
+      CVE Assigned
+      </td>
+    </tr>
+  </tbody>
+</table>
+    
+<h3>Device Discovery</h3>
+<p>
+While performing passive recon, I located a Kilview E3 encoder with a publicly exposed login portal:
+</p>
+  <!-- login 
+  <img src="/images/dashboard.png" alt="Pi-hole Admin Dashboard" style="width:100%; margin-top: 1.5rem; border: 1px solid #333; border-radius: 8px;">
+  -->
+<h3>Reconnaissance of Web Interface</h3>
+<p>
+  Inspecting hte login page's source revealed a linked JavaScript file which most likely was responsible for the web application logic
+</p> 
+    <!-- curl 
+  <img src="/images/dashboard.png" alt="Pi-hole Admin Dashboard" style="width:100%; margin-top: 1.5rem; border: 1px solid #333; border-radius: 8px;">
+  -->
+<h3>Application Logic and API Discovery</h3>
+<p>
+  The JavaScript was viewable within a web browser by going to the URL path associated with it. This led me to discover that the web application called API functions through specific URL addresses. To call an API in the URL, the URL is prefixed with a value called "proxyUrl" which is defined as the machine's IP address followed by /api/.
+</p>
+
+ <!-- proxy url api format 
+  <img src="/images/dashboard.png" alt="Pi-hole Admin Dashboard" style="width:100%; margin-top: 1.5rem; border: 1px solid #333; border-radius: 8px;">
+  -->
+<h3>Identification of Vulnerable Endpoints</h3>
+<p>
+Following this API URL definition were a series of API functions with their respective URLs to call them. Some functions had parameter values that were handled in thier execution. However functions with no parameters could be called without any authorization, which including the factory reset function "systemctrl/system/reFactory".
+</p>
+ <!-- factory reset API 
+  <img src="/images/dashboard.png" alt="Pi-hole Admin Dashboard" style="width:100%; margin-top: 1.5rem; border: 1px solid #333; border-radius: 8px;">
+  -->
+<h3>Exploitation</h3>
+<p>
+  After crafting the URL payload to call the factory reset, I entered it into the URL bar which returned a screen that confirmed the execution of the function.
+</p>
+ <!-- confirmed reset 
+  <img src="/images/dashboard.png" alt="Pi-hole Admin Dashboard" style="width:100%; margin-top: 1.5rem; border: 1px solid #333; border-radius: 8px;">
+  -->
+<h3>Post Explotation</h3>
+<p>
+After factory reseting the device, I have observed two possible outcomes.
+</p>
+<p>
+The most common outcome is the device is no longer reachable post factory reset. Assuming that the reset erases a specific configuration or setting that had intially made it publicly accessible.
+</p>
+<p>
+The other outcome being that the device is still publically accessible, which allows the attacker to use the default credentials to login. Giving the attacker full adminstrative access to the device.
+</p>
+ <!-- post exploit  
+  <img src="/images/dashboard.png" alt="Pi-hole Admin Dashboard" style="width:100%; margin-top: 1.5rem; border: 1px solid #333; border-radius: 8px;">
+  -->
+
+  </main>
+  <footer>
+    &copy; 2025 Darrin Jackson
+  </footer>
+</body>
+</html>
