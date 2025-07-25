@@ -59,7 +59,7 @@
   <main>
 <h2>Unauthenticated Factory Reset Vulnerability in Kiloview E3 Video Encoder</h2>
 <p>
-Confrmed for Software Version 1.20.0006
+Confirmed for Software Version 1.20.0006
 </p>
 
   <h3>Summary</h3>
@@ -89,7 +89,7 @@ Confrmed for Software Version 1.20.0006
       Monday, April 7th, 2025
       </td>
       <td>
-      CVE Request sumbitted to MITRE
+      CVE Request submitted to MITRE
       </td>
     </tr>
     <tr>
@@ -144,14 +144,14 @@ While performing passive recon, I located a Kilview E3 encoder with a publicly e
   -->
 <h3>Reconnaissance of Web Interface</h3>
 <p>
-  Inspecting hte login page's source revealed a linked JavaScript file which most likely was responsible for the web application logic
+  Inspecting the login page's source revealed a linked JavaScript file which most likely was responsible for the web application logic
 </p> 
     <!-- curl 
   <img src="/images/dashboard.png" alt="Pi-hole Admin Dashboard" style="width:100%; margin-top: 1.5rem; border: 1px solid #333; border-radius: 8px;">
   -->
 <h3>Application Logic and API Discovery</h3>
 <p>
-  The JavaScript was viewable within a web browser by going to the URL path associated with it. This led me to discover that the web application called API functions through specific URL addresses. To call an API in the URL, the URL is prefixed with a value called "proxyUrl" which is defined as the machine's IP address followed by /api/.
+  The JavaScript was viewable within a web browser by going to the URL path associated with it. This led me to discover that the web application called API functions through specific URL addresses. The application uses a JavaScript-defined variable proxyUrl, pointing to [device_ip]/api/, as the base for its internal API calls.
 </p>
 
  <!-- proxy url api format 
@@ -159,31 +159,46 @@ While performing passive recon, I located a Kilview E3 encoder with a publicly e
   -->
 <h3>Identification of Vulnerable Endpoints</h3>
 <p>
-Following this API URL definition were a series of API functions with their respective URLs to call them. Some functions had parameter values that were handled in thier execution. However functions with no parameters could be called without any authorization, which including the factory reset function "systemctrl/system/reFactory".
+Following this API URL definition were a series of API functions with their respective URLs to call them. Some functions had parameter values that were handled in their execution. However functions with no parameters could be called without any authorization, which including the factory reset function "systemctrl/system/reFactory".
 </p>
  <!-- factory reset API 
   <img src="/images/dashboard.png" alt="Pi-hole Admin Dashboard" style="width:100%; margin-top: 1.5rem; border: 1px solid #333; border-radius: 8px;">
   -->
 <h3>Exploitation</h3>
 <p>
-  After crafting the URL payload to call the factory reset, I entered it into the URL bar which returned a screen that confirmed the execution of the function.
+Using the documented endpoint, I crafted a direct API call to the factory reset function. Submitting this request via a browser confirmed successful execution with a status response of result: ok.
 </p>
  <!-- confirmed reset 
   <img src="/images/dashboard.png" alt="Pi-hole Admin Dashboard" style="width:100%; margin-top: 1.5rem; border: 1px solid #333; border-radius: 8px;">
   -->
-<h3>Post Explotation</h3>
+<h3>Post Exploitation</h3>
 <p>
-After factory reseting the device, I have observed two possible outcomes.
+After factory resetting the device, I have observed two possible outcomes.
 </p>
 <p>
 The most common outcome is the device is no longer reachable post factory reset. Assuming that the reset erases a specific configuration or setting that had intially made it publicly accessible.
 </p>
 <p>
-The other outcome being that the device is still publically accessible, which allows the attacker to use the default credentials to login. Giving the attacker full adminstrative access to the device.
+The other outcome being that the device is still accessible remotely, which allows the attacker to use the default credentials to login. Giving the attacker full administrative access to the device.
 </p>
  <!-- post exploit  
   <img src="/images/dashboard.png" alt="Pi-hole Admin Dashboard" style="width:100%; margin-top: 1.5rem; border: 1px solid #333; border-radius: 8px;">
   -->
+
+<h3>Skills and Knowledge Developed</h3>
+<ul>
+  <li><strong>Real-World Reconnaissance and Target Profiling:</strong> Conducted passive reconnaissance to identify exposed assets and performed structured analysis of the login page’s front-end logic to uncover embedded references to backend application components.</li>
+
+  <li><strong>API Enumeration Through JavaScript Reverse Engineering:</strong> Analyzed obfuscated client-side JavaScript to extract API route structures and access patterns, enabling direct interaction with undocumented endpoints outside of intended workflows.</li>
+
+  <li><strong>Manual Payload Construction and Endpoint Validation:</strong> Constructed and executed HTTP requests targeting API endpoints to evaluate authentication controls and endpoint behavior without relying on automated scanners or fuzzers.</li>
+
+  <li><strong>Dynamic Behavior Assessment in Uncontrolled Environments:</strong> Observed and documented inconsistent device responses post-exploitation, developing an understanding of how deployment variables and configuration states can affect vulnerability outcomes in production systems.</li>
+
+  <li><strong>Responsible Disclosure Process Execution:</strong> Engaged with the vendor directly to report findings, provided reproduction details, and collaborated through the patch lifecycle. Coordinated vulnerability disclosure in parallel with the CVE assignment process to ensure ethical handling.</li>
+
+  <li><strong>Professional Communication and Stakeholder Coordination:</strong> Navigated multi-month communication with vendor representatives and maintained clear technical documentation throughout. This reinforced the value of persistence, clarity, and structure when working with external security stakeholders.</li>
+</ul>
 
   </main>
   <footer>
