@@ -38,20 +38,78 @@
       font-family: 'Molot', 'Fira Code', monospace;
       color: #a962e8;
     }
+    nav {
+  display: flex;
+  justify-content: center;
+  background-color: #111;
+    }
+  
+  .dropdown {
+    position: relative;
+    display: inline-block;
+    }
+  
+  .dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #222;
+    min-width: 160px;
+    z-index: 1;
+    text-align: left;
+    border: 1px solid #333;
+    }
+  
+  .dropdown-content a {
+    color: #a962e8;
+    padding: 0.5rem 1rem;
+    display: block;
+    text-decoration: none;
+    }
+  
+  .dropdown-content a:hover {
+    background-color: #333;
+    }
+  
+  .dropdown:hover .dropdown-content {
+    display: block;
+    }
+
   </style>
 </head>
 <body>
   <header>
     <h1>Darrin Jackson</h1>
-    <nav>
-      <a href="/">Home</a>
-      <a href="/projects/">Projects</a>
-      <a href="/writeups/">Writeups</a>   
-      <a href="/ctfs/">CTFs</a>
-      <a href="/certifications/">Credentials</a>
-      <a href="/resume/">Resume</a>
-      <a href="/contact/">Contact</a>
-    </nav>
+<nav>
+    <a href="/">Home</a>
+
+  <div class="dropdown">
+    <a href="#">Projects &#11147</a>
+    <div class="dropdown-content">
+      <a href="/builds/">Builds &#11146</a>
+      <a href="/scripts/">Scripts &#11146</a>
+      <a href="/homelab/">Homelab & Network &#11146</a>
+    </div>
+  </div>
+
+  <div class="dropdown">
+    <a href="#">Writeups &#11147</a>
+    <div class="dropdown-content">
+      <a href="/vulns/">Vuln Discoveries/CVEs &#11146</a>
+      <a href="/reports/">Professional Reports &#11146</a>
+      <a href="/ctfs/">CTFs &#11146</a>
+    </div>
+  </div>
+
+  <div class="dropdown">
+    <a href="#">About Me &#11147</a>
+    <div class="dropdown-content">
+      <a href="/certifications/">Credentials &#11146</a>
+      <a href="/resume/">Resume &#11146</a>
+      <a href="/contact/">Contact &#11146</a>
+    </div>
+  </div>
+</nav>
+    
   </header>
   <main>
     <h2>Cybersecurity Portfolio</h2>
