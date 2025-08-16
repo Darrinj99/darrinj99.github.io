@@ -169,6 +169,22 @@
   <footer>
     &copy; 2025 Darrin Jackson
   </footer>
+  <script>
+  document.querySelectorAll('.dropdown > a').forEach(link => {
+    link.addEventListener('click', function (e) {
+      e.preventDefault();
+      const open = this.parentElement.classList.contains('open');
+      
+      // Close all dropdowns first
+      document.querySelectorAll('.dropdown').forEach(drop => drop.classList.remove('open'));
+
+      // Open clicked one if it wasn't already open
+      if (!open) {
+        this.parentElement.classList.add('open');
+      }
+    });
+  });
+</script>
 </body>
 </html>
 
