@@ -25,10 +25,10 @@
       text-align: center;
     }
     nav a {
-      margin: 0 0.5rem;
+      margin: 0 1rem;
       color: #a962e8;
       text-decoration: none;
-      padding: 0.5rem 1rem; 
+      padding: 0.75rem 1rem; 
       font-size: 1.1rem;     
     }
     main {
@@ -66,7 +66,7 @@
   
   .dropdown-content a {
     color: #a962e8;
-    padding: 0.6rem 1.2rem;
+    padding: 0.75rem 1rem;
     font-size: 1rem;
     display: block;
     text-decoration: none;
@@ -76,9 +76,42 @@
     background-color: #333;
     }
   
+    .dropdown .dropdown-content {
+    display: none;
+  }
+  
+  .dropdown.open .dropdown-content {
+    display: block;
+  }
+
+@media (max-width: 768px) {
+  nav {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .dropdown-content {
+    position: static;       /* stack vertically instead of absolute */
+    border: none;
+    box-shadow: none;
+  }
+
   .dropdown:hover .dropdown-content {
     display: block;
-    }
+  }
+
+  nav a, .dropdown-content a {
+    width: 100%;
+    text-align: center;
+  }
+  .nav-item {
+    display: inline-block;
+    position: relative;
+    padding: 0.75rem 1rem;
+  }
+
+}
+
 
   </style>
 </head>
@@ -86,12 +119,12 @@
   <header>
     <h1>Darrin Jackson</h1>
 <nav>
-  <div class="dropdown">
+  <div class="nav-item">
     <a href="/">Home</a>
   </div>
 
   <div class="dropdown">
-    <a href="#">Projects &#11147</a>
+    <a href="#">Projects</a>
     <div class="dropdown-content">
       <a href="/builds/">Builds &#11146</a> <!--build this dir-->
       <a href="/scripts/">Scripts &#11146</a> <!--build this dir-->
@@ -100,7 +133,7 @@
   </div>
 
   <div class="dropdown">
-    <a href="#">Writeups &#11147</a>
+    <a href="#">Writeups</a>
     <div class="dropdown-content">
       <a href="/writeups/">Vuln Discoveries/CVEs &#11146</a>
       <a href="/reports/">Professional Reports &#11146</a> <!--build this dir-->
@@ -109,7 +142,7 @@
   </div>
 
   <div class="dropdown">
-    <a href="#">About Me &#11147</a>
+    <a href="#">About Me</a>
     <div class="dropdown-content">
       <a href="/certifications/">Credentials &#11146</a>
       <a href="/resume/">Resume &#11146</a>
@@ -134,5 +167,21 @@ Click a title to see the entire write-up. </p>
   <footer>
     &copy; 2025 Darrin Jackson
   </footer>
+  <script>
+  document.querySelectorAll('.dropdown > a').forEach(link => {
+    link.addEventListener('click', function (e) {
+      e.preventDefault();
+      const open = this.parentElement.classList.contains('open');
+      
+      // Close all dropdowns first
+      document.querySelectorAll('.dropdown').forEach(drop => drop.classList.remove('open'));
+
+      // Open clicked one if it wasn't already open
+      if (!open) {
+        this.parentElement.classList.add('open');
+      }
+    });
+  });
+</script>
 </body>
 </html>
