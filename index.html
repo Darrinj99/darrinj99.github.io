@@ -76,9 +76,14 @@
     background-color: #333;
     }
   
-  .dropdown:hover .dropdown-content {
+    .dropdown .dropdown-content {
+    display: none;
+  }
+  
+  .dropdown.open .dropdown-content {
     display: block;
-    }
+  }
+
 @media (max-width: 768px) {
   nav {
     flex-direction: column;
@@ -113,7 +118,7 @@
   </div>
 
   <div class="dropdown">
-    <a href="#">Projects &#11147</a>
+    <a href="#">Projects</a>
     <div class="dropdown-content">
       <a href="/builds/">Builds &#11146</a> <!--build this dir-->
       <a href="/scripts/">Scripts &#11146</a> <!--build this dir-->
@@ -122,7 +127,7 @@
   </div>
 
   <div class="dropdown">
-    <a href="#">Writeups &#11147</a>
+    <a href="#">Writeups</a>
     <div class="dropdown-content">
       <a href="/writeups/">Vuln Discoveries/CVEs &#11146</a>
       <a href="/reports/">Professional Reports &#11146</a> <!--build this dir-->
@@ -131,7 +136,7 @@
   </div>
 
   <div class="dropdown">
-    <a href="#">About Me &#11147</a>
+    <a href="#">About Me</a>
     <div class="dropdown-content">
       <a href="/certifications/">Credentials &#11146</a>
       <a href="/resume/">Resume &#11146</a>
@@ -153,5 +158,21 @@
   <footer>
     &copy; 2025 Darrin Jackson
   </footer>
+<script>
+  document.querySelectorAll('.dropdown > a').forEach(link => {
+    link.addEventListener('click', function (e) {
+      e.preventDefault();
+      const open = this.parentElement.classList.contains('open');
+      
+      // Close all dropdowns first
+      document.querySelectorAll('.dropdown').forEach(drop => drop.classList.remove('open'));
+
+      // Open clicked one if it wasn't already open
+      if (!open) {
+        this.parentElement.classList.add('open');
+      }
+    });
+  });
+</script>
 </body>
 </html>
