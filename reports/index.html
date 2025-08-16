@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Darrin Jackson | Cybersecurity Portfolio</title>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
+  <style>
+    @font-face {
+      font-family: 'Molot';
+      src: url('/fonts/molot.otf') format('opentype');
+      font-weight: normal;
+      font-style: normal;
+    }
+    body {
+      font-family: 'Fira Code', monospace;
+      background-color: #0a0a0a;
+      color: #e0e0e0;
+      margin: 0;
+      padding: 0;
+    }
+    header, footer {
+      background-color: #111;
+      padding: 1rem;
+      text-align: center;
+    }
+    nav a {
+      margin: 0 0.5rem;
+      color: #a962e8;
+      text-decoration: none;
+      padding: 0.5rem 1rem; 
+      font-size: 1.1rem;     
+    }
+    main {
+      padding: 2rem;
+      max-width: 800px;
+      margin: auto;
+    }
+    h1, h2 {
+      font-family: 'Molot', 'Fira Code', monospace;
+      color: #a962e8;
+    }
+    nav {
+      display: flex;
+      justify-content: center;
+      background-color: #111;
+      font-size: 1.1rem;
+      gap: 2rem;       
+      padding: 1rem;   
+    }
+  
+  .dropdown {
+    position: relative;
+    display: inline-block;
+    }
+  
+  .dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #222;
+    min-width: 160px;
+    z-index: 1;
+    text-align: left;
+    border: 1px solid #333;
+    }
+  
+  .dropdown-content a {
+    color: #a962e8;
+    padding: 0.6rem 1.2rem;
+    font-size: 1rem;
+    display: block;
+    text-decoration: none;
+    }
+  
+  .dropdown-content a:hover {
+    background-color: #333;
+    }
+  
+  .dropdown:hover .dropdown-content {
+    display: block;
+    }
+
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Darrin Jackson</h1>
+<nav>
+  <div class="dropdown">
+    <a href="/">Home</a>
+  </div>
+
+  <div class="dropdown">
+    <a href="#">Projects &#11147</a>
+    <div class="dropdown-content">
+      <a href="/builds/">Builds &#11146</a> <!--build this dir-->
+      <a href="/scripts/">Scripts &#11146</a> <!--build this dir-->
+      <a href="/projects/">Homelab & Network &#11146</a>
+    </div>
+  </div>
+
+  <div class="dropdown">
+    <a href="#">Writeups &#11147</a>
+    <div class="dropdown-content">
+      <a href="/writeups/">Vuln Discoveries/CVEs &#11146</a>
+      <a href="/reports/">Professional Reports &#11146</a> <!--build this dir-->
+      <a href="/ctfs/">CTFs &#11146</a>
+    </div>
+  </div>
+
+  <div class="dropdown">
+    <a href="#">About Me &#11147</a>
+    <div class="dropdown-content">
+      <a href="/certifications/">Credentials &#11146</a>
+      <a href="/resume/">Resume &#11146</a>
+      <a href="/contact/">Contact &#11146</a>
+    </div>
+  </div>
+</nav>
+    
+  </header>
+  <main>
+<h2>Writeups</h2>
+<p> <p style="font-size: 0.9rem; font-style: italic; margin-top: 0.5rem; margin-bottom: 2rem;"> 
+Click a title to see the entire write-up. </p>
+
+<!--
+<hr>    
+   <h3><a href="/writeups/homevulnscan.html"> Home Network Vulnerability Scan &#11146</a></h3>
+<p>I performed a Vulnerability Scan on my home network to practice performing vulnerability scans and a professional report for an enterprise environment</p>
+<hr>
+  -->
+  </main>
+  <footer>
+    &copy; 2025 Darrin Jackson
+  </footer>
+</body>
+</html>
