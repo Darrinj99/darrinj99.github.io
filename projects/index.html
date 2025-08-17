@@ -175,16 +175,27 @@ This project uses a Raspberry Pi 3 as a functional Command & Control (C2) server
 <p>I'm developing a SIEM for  my home network to better familiarize myself with incident and event detection, as well as with SIEM tools.
 
 <hr>
-
-<h3><a href="/projects/usb-injector.html">USB Payload Injector (In Progress) &#11146</a></h3>
-<p>I'm developing a microcontroller-based HID device, inspired by tools like the Rubber Ducky, designed to inject scripted payloads on plug-in. This project will explore HID-based attack vectors, payload obfuscation, and portable physical access.
-
-<hr>
   
   </main>
   <footer>
     &copy; 2025 Darrin Jackson
   </footer>
+  <script>
+  document.querySelectorAll('.dropdown > a').forEach(link => {
+    link.addEventListener('click', function (e) {
+      e.preventDefault();
+      const open = this.parentElement.classList.contains('open');
+      
+      // Close all dropdowns first
+      document.querySelectorAll('.dropdown').forEach(drop => drop.classList.remove('open'));
+
+      // Open clicked one if it wasn't already open
+      if (!open) {
+        this.parentElement.classList.add('open');
+      }
+    });
+  });
+</script>
 </body>
 </html>
 
