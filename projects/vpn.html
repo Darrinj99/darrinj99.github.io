@@ -161,28 +161,38 @@
   <p>
     I chose to host a WireGuard VPN on my existing C2 server. This approach let me leverage a machine already positioned as a central control node, turning it into a dual-purpose gateway. WireGuard was selected for its lightweight design, modern cryptography, ease of setup, and strong community support.
   </p>
-   <!-- DIAGRAM <img src="/images/vpndiagram.png" alt="VPN Diagram" style="width:100%; margin-top: 1.5rem; border: 1px solid #333; border-radius: 8px;">   -->
+    
+   <!-- DIAGRAM -->
+    <img src="/images/vpndiagram.png" alt="VPN Diagram" style="width:100%; margin-top: 1.5rem; border: 1px solid #333; border-radius: 8px;">   
  
     <h3>Development</h3>
   <p>
     I began by installing WireGuard on the C2 server (Raspberry Pi 3). I generated server and client key pairs, configured a private subnet (10.8.0.0/24), and created iptables/NAT rules to allow VPN peers to reach my LAN.
   </p>
     
-  <!-- wg0conf <img src="/images/wg0conf.png" alt="Wireguard Config" style="width:100%; margin-top: 1.5rem; border: 1px solid #333; border-radius: 8px;">-->
+  <!-- wg0conf -->
+    <img src="/images/wg0conf.png" alt="Wireguard Config" style="width:100%; margin-top: 1.5rem; border: 1px solid #333; border-radius: 8px;">
+    
   <p>
     Testing was conducted from my Kali laptop over a mobile hotspot. Once connected, I was able to successfully ping both external addresses (e.g., 8.8.8.8) and internal hosts such as my sinkhole, proving full tunnel functionality.
   </p>
-    <!-- wgshow <img src="/images/wgshow.png" alt="Wireguard Show Clients" style="width:100%; margin-top: 1.5rem; border: 1px solid #333; border-radius: 8px;">-->
+    
+    <!-- wgshow -->
+    <img src="/images/wgshow.png" alt="Wireguard Show Clients" style="width:100%; margin-top: 1.5rem; border: 1px solid #333; border-radius: 8px;">
 
   <h3>Deployment</h3>
   <p>
     The final VPN deployment runs directly on my C2 server, acting as the secure gateway into my homelab. All inbound access is now funneled through this VPN tunnel rather than exposing multiple ports or services directly to the Internet.
   </p>
-    <!-- pingtest <img src="/images/pingtest.png" alt="NMAP Test" style="width:100%; margin-top: 1.5rem; border: 1px solid #333; border-radius: 8px;">-->
+    
+    <!-- pingtest -->
+    <img src="/images/pingtest.png" alt="NMAP Test" style="width:100%; margin-top: 1.5rem; border: 1px solid #333; border-radius: 8px;">
   <p>
     With this in place, I can connect from anywhere and securely reach my internal resources, such as the Pi-hole dashboard on the sinkhole. Externally, only the WireGuard port is visible, greatly reducing attack surface.
   </p>
-    <!-- sinkholeVPN <img src="/images/sinkholevpn.png" alt="sinkhole VPN Access" style="width:100%; margin-top: 1.5rem; border: 1px solid #333; border-radius: 8px;">-->
+    
+    <!-- sinkholeVPN -->
+    <img src="/images/sinkholevpn.png" alt="sinkhole VPN Access" style="width:100%; margin-top: 1.5rem; border: 1px solid #333; border-radius: 8px;">
 
   <h3>Lessons Learned</h3>
   <ul>
