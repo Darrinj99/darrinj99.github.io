@@ -157,14 +157,16 @@
 
   <h3>Design</h3>
   <p>
-    The goal of this project was to create a secure method of remotely accessing my homelab without exposing internal systems, such as my DNS sinkhole, to the public Internet. Exposing services directly introduces unnecessary attack surface, so I needed a way to consolidate inbound access into a single hardened entry point.  </p>
+    The goal of this project was to create a secure method of remotely accessing my homelab without exposing internal systems, such as my DNS sinkhole, to the public Internet. Exposing services directly introduces unnecessary attack surface, so I needed a way to consolidate inbound access into a single hardened entry point.  
+  </p>
+    <!-- DIAGRAM -->
+    <img src="/images/vpndiagram.png" alt="VPN Diagram" style="width:100%; margin-top: 1.5rem; border: 1px solid #333; border-radius: 8px;">   
+ 
   <p>
     I chose to host a WireGuard VPN on my existing C2 server. This approach let me leverage a machine already positioned as a central control node, turning it into a dual-purpose gateway. WireGuard was selected for its lightweight design, modern cryptography, ease of setup, and strong community support.
   </p>
     
-   <!-- DIAGRAM -->
-    <img src="/images/vpndiagram.png" alt="VPN Diagram" style="width:100%; margin-top: 1.5rem; border: 1px solid #333; border-radius: 8px;">   
- 
+
     <h3>Development</h3>
   <p>
     I began by installing WireGuard on the C2 server (Raspberry Pi 3). I generated server and client key pairs, configured a private subnet (10.8.0.0/24), and created iptables/NAT rules to allow VPN peers to reach my LAN.
