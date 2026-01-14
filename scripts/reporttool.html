@@ -1,0 +1,223 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Darrin Jackson | Cybersecurity Portfolio</title>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
+  <style>
+    @font-face {
+      font-family: 'Molot';
+      src: url('/fonts/molot.otf') format('opentype');
+      font-weight: normal;
+      font-style: normal;
+    }
+    body {
+      font-family: 'Fira Code', monospace;
+      background-color: #0a0a0a;
+      color: #e0e0e0;
+      margin: 0;
+      padding: 0;
+    }
+    header, footer {
+      background-color: #111;
+      padding: 1rem;
+      text-align: center;
+    }
+    nav a {
+      margin: 0 1rem;
+      color: #a962e8;
+      text-decoration: none;
+      padding: 0.75rem 1rem; 
+      font-size: 1.1rem;     
+    }
+    main {
+      padding: 2rem;
+      max-width: 800px;
+      margin: auto;
+    }
+    h1, h2 {
+      font-family: 'Molot', 'Fira Code', monospace;
+      color: #a962e8;
+    }
+    nav {
+      display: flex;
+      justify-content: center;
+      background-color: #111;
+      font-size: 1.1rem;
+      gap: 2rem;       
+      padding: 1rem;   
+    }
+  
+  .dropdown {
+    position: relative;
+    display: inline-block;
+    }
+  
+  .dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #222;
+    min-width: 160px;
+    z-index: 1;
+    text-align: left;
+    border: 1px solid #333;
+    }
+  
+  .dropdown-content a {
+    color: #a962e8;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    display: block;
+    text-decoration: none;
+    }
+  
+  .dropdown-content a:hover {
+    background-color: #333;
+    }
+  
+    .dropdown .dropdown-content {
+    display: none;
+  }
+  
+  .dropdown.open .dropdown-content {
+    display: block;
+  }
+
+@media (max-width: 768px) {
+  nav {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .dropdown-content {
+    position: static;       /* stack vertically instead of absolute */
+    border: none;
+    box-shadow: none;
+  }
+
+  .dropdown:hover .dropdown-content {
+    display: block;
+  }
+
+  nav a, .dropdown-content a {
+    width: 100%;
+    text-align: center;
+  }
+  .nav-item {
+  display: inline-block;
+  position: relative;
+  padding: 0.75rem 1rem;
+}
+
+}
+
+
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Darrin Jackson</h1>
+<nav>
+  <div class="nav-item">
+    <a href="/">Home</a>
+  </div>
+
+  <div class="dropdown">
+    <a href="#">Projects</a>
+    <div class="dropdown-content">
+      <a href="/builds/">Builds &#11146</a> <!--build this dir-->
+      <a href="/scripts/">Scripts &#11146</a> <!--build this dir-->
+      <a href="/projects/">Homelab & Network &#11146</a>
+    </div>
+  </div>
+
+  <div class="dropdown">
+    <a href="#">Writeups</a>
+    <div class="dropdown-content">
+      <a href="/writeups/">Vuln Discoveries/CVEs &#11146</a>
+      <a href="/reports/">Professional Reports &#11146</a> <!--build this dir-->
+      <a href="/ctfs/">CTFs &#11146</a>
+    </div>
+  </div>
+
+  <div class="dropdown">
+    <a href="#">About Me</a>
+    <div class="dropdown-content">
+      <a href="/certifications/">Credentials &#11146</a>
+      <a href="/resume/">Resume &#11146</a>
+      <a href="/contact/">Contact &#11146</a>
+    </div>
+  </div>
+</nav>
+    
+  </header>
+  <main>
+    <h2>PC Component Report Tool</h2>
+
+<p>This script is the first script i have made in Powershell. I orginally built this script to help a friend remotely identify the components in their gaming PC. Said friend had not touched the PC in so long that they no longer knew what was in the machine, nor what to upgrade to improve performance. </p> 
+<p>It's a simple and short script that gathers information about the host machine's components and the details regarding those components. The results are parsed to a .txt file, which is then saved to the machine's desktop. Which allows for simple and fast reviewing and sharing.</p>
+
+<code>
+    # Set output path
+  $outputPath = "$env:USERPROFILE\Desktop\PCReport.txt"
+  
+  # Start the report
+  "PC Information Report - Generated on $(Get-Date)" | Out-File -FilePath $outputPath
+  "==============================================" | Out-File -Append $outputPath
+  
+  # Basic system info
+  "--- System Info ---" | Out-File -Append $outputPath
+  Get-ComputerInfo | Select-Object CsManufacturer, CsModel, CsSystemType, CsTotalPhysicalMemory, CsNumberOfLogicalProcessors, OsName, OsVersion, OsInstallDate, BiosManufacturer, BiosBIOSVersion | Format-List | Out-File -Append $outputPath
+  
+  # Physical disks info (drive type, health, size)
+  "`n--- Physical Disk Info ---" | Out-File -Append $outputPath
+  Get-PhysicalDisk | Select-Object DeviceID, MediaType, Size, SerialNumber, HealthStatus | Format-Table -AutoSize | Out-File -Append $outputPath
+  
+  # Drive model and interface type
+  "`n--- Disk Models and Interfaces ---" | Out-File -Append $outputPath
+  Get-WmiObject Win32_DiskDrive | Select-Object Model, InterfaceType, MediaType, Size | Format-Table -AutoSize | Out-File -Append $outputPath
+  
+  # SMART Failure Prediction
+  "`n--- SMART Failure Prediction ---" | Out-File -Append $outputPath
+  Get-WmiObject MSStorageDriver_FailurePredictStatus | Select-Object InstanceName, PredictFailure | Format-Table -AutoSize | Out-File -Append $outputPath
+  
+  # Final note
+  "`nReport saved to: $outputPath" | Out-File -Append $outputPath
+</code>  
+    
+<h3>Skills and Knowledge Developed</h3>
+<ul>
+  <li><strong>Powershell Scripting Fundamentals:</strong> Strengthened practical PowerShell scripting skills by developing and executing a functional script, transitioning from theoretical understanding to applied use.</li>
+
+  <li><strong>Troubleshooting and Debugging:</strong> Identified and resolved execution errors through log review, iterative testing, and targeted research of PowerShell behavior and syntax.</li>
+  
+  <li><strong>Problem Solving Through Automation:</strong> Recognized a repetitive or inefficient task and implemented a scripted solution to improve reliability and reduce manual effort.</li>
+
+  <li><strong>Basic Data Handling in Scripts:</strong> Gained experience working with common data types and variables to store, process, and manipulate information within a PowerShell script.</li>
+
+</ul>
+
+  </main>
+  <footer>
+    &copy; 2026 Darrin Jackson
+  </footer>
+  <script>
+  document.querySelectorAll('.dropdown > a').forEach(link => {
+    link.addEventListener('click', function (e) {
+      e.preventDefault();
+      const open = this.parentElement.classList.contains('open');
+      
+      // Close all dropdowns first
+      document.querySelectorAll('.dropdown').forEach(drop => drop.classList.remove('open'));
+
+      // Open clicked one if it wasn't already open
+      if (!open) {
+        this.parentElement.classList.add('open');
+      }
+    });
+  });
+</script>
+</body>
+</html>
