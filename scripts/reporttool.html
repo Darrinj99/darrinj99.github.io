@@ -159,6 +159,7 @@
 <p>This script is the first script i have made in Powershell. I orginally built this script to help a friend remotely identify the components in their gaming PC. Said friend had not touched the PC in so long that they no longer knew what was in the machine, nor what to upgrade to improve performance. </p> 
 <p>It's a simple and short script that gathers information about the host machine's components and the details regarding those components. The results are parsed to a .txt file, which is then saved to the machine's desktop. Which allows for simple and fast reviewing and sharing.</p>
 
+<pre> 
 <code>
     # Set output path
   $outputPath = "$env:USERPROFILE\Desktop\PCReport.txt"
@@ -186,7 +187,8 @@
   # Final note
   "`nReport saved to: $outputPath" | Out-File -Append $outputPath
 </code>  
-    
+</pre>   
+  
 <h3>Skills and Knowledge Developed</h3>
 <ul>
   <li><strong>Powershell Scripting Fundamentals:</strong> Strengthened practical PowerShell scripting skills by developing and executing a functional script, transitioning from theoretical understanding to applied use.</li>
