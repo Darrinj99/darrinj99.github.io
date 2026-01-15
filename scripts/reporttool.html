@@ -161,31 +161,99 @@
 
 <pre> 
 <code>
-    # Set output path
+  # PCReport.ps1
+  # Generates a PC hardware + storage health report on the current user's Desktop.
+  
   $outputPath = "$env:USERPROFILE\Desktop\PCReport.txt"
   
-  # Start the report
-  "PC Information Report - Generated on $(Get-Date)" | Out-File -FilePath $outputPath
-  "==============================================" | Out-File -Append $outputPath
+  # Start report (overwrite if it already exists)
+  "PC Information Report - Generated on $(Get-Date)" | Out-File -FilePath $outputPath -Encoding UTF8
+  "==================================================" | Out-File -FilePath $outputPath -Append -Encoding UTF8
   
-  # Basic system info
-  "--- System Info ---" | Out-File -Append $outputPath
-  Get-ComputerInfo | Select-Object CsManufacturer, CsModel, CsSystemType, CsTotalPhysicalMemory, CsNumberOfLogicalProcessors, OsName, OsVersion, OsInstallDate, BiosManufacturer, BiosBIOSVersion | Format-List | Out-File -Append $outputPath
+  # ----------------------------
+  # System Information
+  # ----------------------------
+  "`n[System Information]" | Out-File -FilePath $outputPath -Append -Encoding UTF8
+  Get-ComputerInfo |
+      Select-Object CsManufacturer, CsModel, CsSystemType, WindowsProductName, WindowsVersion, OsBuildNumber, BiosBIOSVersion |
+      Format-List | Out-File -FilePath $outputPath -Append -Encoding UTF8
   
-  # Physical disks info (drive type, health, size)
-  "`n--- Physical Disk Info ---" | Out-File -Append $outputPath
-  Get-PhysicalDisk | Select-Object DeviceID, MediaType, Size, SerialNumber, HealthStatus | Format-Table -AutoSize | Out-File -Append $outputPath
+  # ----------------------------
+  # CPU Information
+  # ----------------------------
+  "`n[CPU Information]" | Out-File -FilePath $outputPath -Append -Encoding UTF8
+  Get-CimInstance Win32_Processor |
+      Select-Object Name,
+                    Manufacturer,
+                    NumberOfCores,
+                    NumberOfLogicalProcessors,
+                    MaxClockSpeed,
+                    CurrentClockSpeed,
+                    L2CacheSize,
+                    L3CacheSize,
+                    ProcessorId |
+      Format-List | Out-File -FilePath $outputPath -Append -Encoding UTF8
   
-  # Drive model and interface type
-  "`n--- Disk Models and Interfaces ---" | Out-File -Append $outputPath
-  Get-WmiObject Win32_DiskDrive | Select-Object Model, InterfaceType, MediaType, Size | Format-Table -AutoSize | Out-File -Append $outputPath
+  # ----------------------------
+  # RAM Information (Summary)
+  # ----------------------------
+  "`n[Memory (RAM) Summary]" | Out-File -FilePath $outputPath -Append -Encoding UTF8
   
+  $cs = Get-CimInstance Win32_ComputerSystem
+  $os = Get-CimInstance Win32_OperatingSystem
+  
+  [PSCustomObject]@{
+      TotalPhysicalMemory_GB = [math]::Round($cs.TotalPhysicalMemory / 1GB, 2)
+      FreePhysicalMemory_GB  = [math]::Round(($os.FreePhysicalMemory * 1KB) / 1GB, 2)
+      TotalVisibleMemory_GB  = [math]::Round(($os.TotalVisibleMemorySize * 1KB) / 1GB, 2)
+  } | Format-List | Out-File -FilePath $outputPath -Append -Encoding UTF8
+  
+  # ----------------------------
+  # RAM Information (Modules / Sticks)
+  # ----------------------------
+  "`n[Memory (RAM) Modules]" | Out-File -FilePath $outputPath -Append -Encoding UTF8
+  Get-CimInstance Win32_PhysicalMemory |
+      Select-Object BankLabel,
+                    Manufacturer,
+                    PartNumber,
+                    SerialNumber,
+                    @{Name="Capacity_GB";Expression={[math]::Round($_.Capacity / 1GB, 2)}},
+                    Speed,
+                    ConfiguredClockSpeed,
+                    FormFactor,
+                    MemoryType |
+      Format-Table -AutoSize | Out-File -FilePath $outputPath -Append -Encoding UTF8
+  
+  # ----------------------------
+  # Physical Disk Information
+  # ----------------------------
+  "`n[Physical Disk Information]" | Out-File -FilePath $outputPath -Append -Encoding UTF8
+  Get-PhysicalDisk |
+      Select-Object DeviceID, MediaType, Size, SerialNumber, HealthStatus, OperationalStatus |
+      Format-Table -AutoSize | Out-File -FilePath $outputPath -Append -Encoding UTF8
+  
+  # ----------------------------
+  # Disk Drive Model + Interface (WMI)
+  # ----------------------------
+  "`n[Disk Drive Model & Interface]" | Out-File -FilePath $outputPath -Append -Encoding UTF8
+  Get-CimInstance Win32_DiskDrive |
+      Select-Object Model, InterfaceType, @{Name="Size_GB";Expression={[math]::Round($_.Size / 1GB, 2)}} |
+      Format-Table -AutoSize | Out-File -FilePath $outputPath -Append -Encoding UTF8
+  
+  # ----------------------------
   # SMART Failure Prediction
-  "`n--- SMART Failure Prediction ---" | Out-File -Append $outputPath
-  Get-WmiObject MSStorageDriver_FailurePredictStatus | Select-Object InstanceName, PredictFailure | Format-Table -AutoSize | Out-File -Append $outputPath
+  # ----------------------------
+  "`n[SMART Failure Prediction]" | Out-File -FilePath $outputPath -Append -Encoding UTF8
+  Get-CimInstance -Namespace root\wmi -ClassName MSStorageDriver_FailurePredictStatus |
+      Select-Object InstanceName, PredictFailure |
+      Format-Table -AutoSize | Out-File -FilePath $outputPath -Append -Encoding UTF8
   
-  # Final note
-  "`nReport saved to: $outputPath" | Out-File -Append $outputPath
+  # Footer
+  "`n==================================================" | Out-File -FilePath $outputPath -Append -Encoding UTF8
+  "Report saved to: $outputPath" | Out-File -FilePath $outputPath -Append -Encoding UTF8
+  
+  Write-Output "Report saved to: $outputPath"
+
 </code>  
 </pre>   
   
