@@ -9,6 +9,102 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/site.css">
+<style>
+  /* About-page-only additions. These can be moved into site.css later. */
+  .about-now { max-width: 880px; min-height: 0; }
+
+  .credential-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .credential-tile {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    overflow: hidden;
+    text-decoration: none;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    transition: .16s ease;
+  }
+
+  a.credential-tile:hover {
+    transform: translateY(-2px);
+    border-color: #50505d;
+    background: var(--panel-2);
+  }
+
+  .credential-preview {
+    height: 135px;
+    overflow: hidden;
+    background: #0d0d10;
+    border-bottom: 1px solid var(--line);
+    position: relative;
+  }
+
+  .credential-preview object {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    pointer-events: none;
+    background: #fff;
+  }
+
+  .credential-preview.pending {
+    display: grid;
+    place-items: center;
+    padding: 14px;
+    text-align: center;
+    background:
+      linear-gradient(135deg, rgba(155,108,255,.08), rgba(244,204,77,.04)),
+      var(--bg-soft);
+  }
+
+  .credential-preview.pending span {
+    font: 600 .7rem/1.5 var(--mono);
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .07em;
+  }
+
+  .credential-copy {
+    padding: 11px 12px 13px;
+  }
+
+  .credential-copy .issuer {
+    display: block;
+    margin-bottom: 5px;
+    font: 600 .62rem/1.2 var(--mono);
+    color: var(--dim);
+    text-transform: uppercase;
+    letter-spacing: .07em;
+  }
+
+  .credential-copy strong {
+    display: block;
+    font-size: .82rem;
+    line-height: 1.35;
+    color: var(--text-soft);
+  }
+
+  .credential-note {
+    margin: 12px 0 0;
+    color: var(--dim);
+    font-size: .78rem;
+  }
+
+  @media (max-width: 920px) {
+    .credential-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+
+  @media (max-width: 650px) {
+    .credential-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .credential-preview { height: 120px; }
+  }
+</style>
 </head>
 <body><div class="shell">
 <header class="topbar"><nav class="nav">
@@ -16,33 +112,125 @@
 <div class="navlinks">
 <a data-nav href="/work/">Work</a><a data-nav href="/research/">Writeups</a><a data-nav href="/lab/">Lab</a><a data-nav href="/about/">About</a>
 </div></nav></header>
+
 <main class="container">
 <header class="page-head">
   <div class="kicker">About</div>
   <h1>A little more about me.</h1>
   <p>My background is mostly systems and networking, with more recent professional and personal experience in security. I currently work as a Security Analyst in an MSP environment, where security work is mixed in with systems, networking, support, and general troubleshooting.</p>
 </header>
-<div class="grid">
-  <div class="card featured">
-    <div class="eyebrow">Where I am now</div>
-    <h3>Security is where I want to keep growing.</h3>
-    <p>Most of my recent personal time has been focused on penetration testing. I recently completed HTB's CPTS, and I am continuing to work on the parts I want to be stronger at: methodology, enumeration, Active Directory, note taking, and reporting.</p>
-    <p>I am also spending time exploring DFIR, threat intelligence, OSINT, and threat hunting. I have not settled on one narrow specialty, but I want to keep moving toward more hands-on security work and keep building on the systems and networking background I already have.</p>
-  </div>
-  <div class="card compact">
-    <div class="eyebrow">Certifications</div>
-    <h3>Current security certs</h3>
-    <p>HTB CPTS<br>CompTIA CySA+<br>CompTIA PenTest+<br>CompTIA Security+<br>CompTIA CSAP</p>
-  </div>
+
+<div class="card featured about-now">
+  <div class="eyebrow">Where I am now</div>
+  <h3>Security is where I want to keep growing.</h3>
+  <p>Most of my recent personal time has been focused on penetration testing. I recently completed HTB's CPTS, which showed me that I still need to improve my methodology, note taking, and reporting. I am also starting to prepare for OSCP and have started focusing more on Active Directory attacks to get ready for it.</p>
+  <p>I am also spending time exploring DFIR, threat intelligence, OSINT, and threat hunting. I have not settled on one narrow specialty, but I want to keep moving toward more hands-on security work and keep building on the systems and networking background I already have.</p>
 </div>
+
 <section class="section">
-  <div class="section-head"><div><div class="kicker">Background</div><h2>Where my experience comes from.</h2></div></div>
+  <div class="section-head">
+    <div>
+      <div class="kicker">Background</div>
+      <h2>Where my experience comes from.</h2>
+    </div>
+  </div>
+
   <div class="list">
-    <div class="list-item"><div class="type">MSP</div><div><h3>Security Analyst</h3><p>Security work mixed with systems and network troubleshooting, incident support, client support, and the day-to-day technical work that comes with a small MSP.</p></div></div>
-    <div class="list-item"><div class="type">IT / networking</div><div><h3>Site support and infrastructure troubleshooting</h3><p>Endpoints, Wi-Fi and access points, cameras, printers, DHCP/DNS, ISP issues, vendor systems, and general site support.</p></div></div>
-    <div class="list-item"><div class="type">Army</div><div><h3>Geospatial and systems support</h3><p>Geospatial work, technical leadership, system configuration and maintenance, security compliance, troubleshooting, and supporting users in Army environments.</p></div></div>
+    <div class="list-item">
+      <div class="type">MSP</div>
+      <div>
+        <h3>Security Analyst</h3>
+        <p>At a small MSP, my role covers a broad mix of security and general IT. I work across client systems and networks, handling security-related work alongside administration, troubleshooting, support, and incident response. It has given me a practical view of how security fits into the systems people actually rely on day to day.</p>
+      </div>
+    </div>
+
+    <div class="list-item">
+      <div class="type">IT / networking</div>
+      <div>
+        <h3>IT Support Specialist</h3>
+        <p>My time in site IT support built most of my hands-on foundation in endpoints, networking, and infrastructure. I supported a busy warehouse environment across Windows, macOS, and Linux, while working through the device, access, network, and site issues needed to keep operations running.</p>
+      </div>
+    </div>
+
+    <div class="list-item">
+      <div class="type">Military</div>
+      <div>
+        <h3>Army National Guard</h3>
+        <p>My military experience combines geospatial engineering, systems support, technical leadership, and security responsibilities. I have worked with sensitive and classified systems, supported secure environments, and handled work where access control, compliance, documentation, reliability, and procedural discipline all matter.</p>
+      </div>
+    </div>
   </div>
 </section>
+
+<section class="section">
+  <div class="section-head">
+    <div>
+      <div class="kicker">Credentials</div>
+      <h2>Certifications &amp; certificates.</h2>
+      <p>A compact archive of the certifications and training certificates I have completed. Click a tile to open the full certificate.</p>
+    </div>
+  </div>
+
+  <div class="credential-grid">
+    <a class="credential-tile" href="/certifications/cpts.pdf" target="_blank" rel="noopener">
+      <div class="credential-preview"><object data="/certifications/cpts.pdf#page=1&toolbar=0&navpanes=0&scrollbar=0&view=FitH" type="application/pdf" aria-hidden="true"></object></div>
+      <div class="credential-copy"><span class="issuer">HTB</span><strong>Certified Penetration Testing Specialist</strong></div>
+    </a>
+
+    <a class="credential-tile" href="/certifications/pentest+.pdf" target="_blank" rel="noopener">
+      <div class="credential-preview"><object data="/certifications/pentest+.pdf#page=1&toolbar=0&navpanes=0&scrollbar=0&view=FitH" type="application/pdf" aria-hidden="true"></object></div>
+      <div class="credential-copy"><span class="issuer">CompTIA</span><strong>PenTest+</strong></div>
+    </a>
+
+    <a class="credential-tile" href="/certifications/cysa.pdf" target="_blank" rel="noopener">
+      <div class="credential-preview"><object data="/certifications/cysa.pdf#page=1&toolbar=0&navpanes=0&scrollbar=0&view=FitH" type="application/pdf" aria-hidden="true"></object></div>
+      <div class="credential-copy"><span class="issuer">CompTIA</span><strong>CySA+</strong></div>
+    </a>
+
+    <a class="credential-tile" href="/certifications/sec+.pdf" target="_blank" rel="noopener">
+      <div class="credential-preview"><object data="/certifications/sec+.pdf#page=1&toolbar=0&navpanes=0&scrollbar=0&view=FitH" type="application/pdf" aria-hidden="true"></object></div>
+      <div class="credential-copy"><span class="issuer">CompTIA</span><strong>Security+</strong></div>
+    </a>
+
+    <a class="credential-tile" href="/certifications/csap.pdf" target="_blank" rel="noopener">
+      <div class="credential-preview"><object data="/certifications/csap.pdf#page=1&toolbar=0&navpanes=0&scrollbar=0&view=FitH" type="application/pdf" aria-hidden="true"></object></div>
+      <div class="credential-copy"><span class="issuer">CompTIA</span><strong>Security Analytics Professional (CSAP)</strong></div>
+    </a>
+
+    <a class="credential-tile" href="/certifications/CNVP.pdf" target="_blank" rel="noopener">
+      <div class="credential-preview"><object data="/certifications/CNVP.pdf#page=1&toolbar=0&navpanes=0&scrollbar=0&view=FitH" type="application/pdf" aria-hidden="true"></object></div>
+      <div class="credential-copy"><span class="issuer">CompTIA</span><strong>Network Vulnerability Assessment Professional (CNVP)</strong></div>
+    </a>
+
+    <a class="credential-tile" href="/certifications/CNSP.pdf" target="_blank" rel="noopener">
+      <div class="credential-preview"><object data="/certifications/CNSP.pdf#page=1&toolbar=0&navpanes=0&scrollbar=0&view=FitH" type="application/pdf" aria-hidden="true"></object></div>
+      <div class="credential-copy"><span class="issuer">CompTIA</span><strong>Network Security Professional (CNSP)</strong></div>
+    </a>
+
+    <a class="credential-tile" href="/certifications/google_cysec.pdf" target="_blank" rel="noopener">
+      <div class="credential-preview"><object data="/certifications/google_cysec.pdf#page=1&toolbar=0&navpanes=0&scrollbar=0&view=FitH" type="application/pdf" aria-hidden="true"></object></div>
+      <div class="credential-copy"><span class="issuer">Google</span><strong>Cybersecurity Professional Certificate</strong></div>
+    </a>
+
+    <a class="credential-tile" href="/certifications/ibm_cysec.pdf" target="_blank" rel="noopener">
+      <div class="credential-preview"><object data="/certifications/ibm_cysec.pdf#page=1&toolbar=0&navpanes=0&scrollbar=0&view=FitH" type="application/pdf" aria-hidden="true"></object></div>
+      <div class="credential-copy"><span class="issuer">IBM</span><strong>IT Fundamentals for Cybersecurity</strong></div>
+    </a>
+
+    <a class="credential-tile" href="/certifications/IBM_ethicalhacking.pdf" target="_blank" rel="noopener">
+      <div class="credential-preview"><object data="/certifications/IBM_ethicalhacking.pdf#page=1&toolbar=0&navpanes=0&scrollbar=0&view=FitH" type="application/pdf" aria-hidden="true"></object></div>
+      <div class="credential-copy"><span class="issuer">IBM</span><strong>Ethical Hacking with Open Source Tools</strong></div>
+    </a>
+
+    <a class="credential-tile" href="/certifications/infosec_compfor.pdf" target="_blank" rel="noopener">
+      <div class="credential-preview"><object data="/certifications/infosec_compfor.pdf#page=1&toolbar=0&navpanes=0&scrollbar=0&view=FitH" type="application/pdf" aria-hidden="true"></object></div>
+      <div class="credential-copy"><span class="issuer">Infosec</span><strong>Computer Forensics Certificate</strong></div>
+    </a>
+  </div>
+
+  <p class="credential-note">The CPTS tile is intentionally left ready for the certificate file once it is added to the repository.</p>
+</section>
 </main>
-<footer class="footer"><div class="container"><span>© 2026 Darrin Jackson</span><span class="mono">cybersecurity · networking · systems</span></div></footer>
+
+<footer class="footer"><div class="container"><span>© 2026 Darrin Jackson</span></div></footer>
 <script src="/assets/js/site.js"></script></div></body></html>
