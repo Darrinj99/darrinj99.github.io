@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="A dedicated OPNsense router and firewall built by Darrin Jackson on repurposed Dell hardware.">
+<title>OPNsense Router / Firewall | Darrin Jackson</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/css/site.css">
+</head>
+<body><div class="shell">
+<header class="topbar"><nav class="nav">
+<a class="brand" href="/"><span class="brand-name">Darrin Jackson</span><span class="brand-sub">portfolio</span></a>
+<div class="navlinks">
+<a data-nav href="/work/">Work</a><a data-nav href="/research/">Writeups</a><a data-nav href="/lab/">Lab</a><a data-nav href="/about/">About</a>
+</div></nav></header>
+<main class="container"><header class="page-head"><div class="kicker">Homelab / networking</div><h1>Dedicated OPNsense router / firewall</h1><p>I wanted more control over my home network than a normal consumer router gave me, so I repurposed a Dell OptiPlex 3070 SFF into a dedicated OPNsense box.</p></header><div class="article-layout"><article class="article"><h2>What I wanted from the build</h2><ul><li>A dedicated firewall instead of relying on an all-in-one consumer router.</li><li>Separate physical WAN and LAN interfaces.</li><li>Hardware that OPNsense and FreeBSD would support reliably.</li><li>A platform I could later use for segmentation, VPN access, logging, IDS, and other network-security projects.</li></ul><h2>Working around the hardware</h2><p>The OptiPlex was a good small-form-factor base, but chassis clearance made the normal PCIe layout awkward for the NIC I wanted to use. I ended up repurposing the M.2 Key-E WLAN slot for Ethernet instead.</p><p>I chose an Intel i210-based adapter because it is well supported by FreeBSD through the <code>igb</code> driver. I did not want the external side of the firewall depending on a USB Ethernet adapter if I could avoid it.</p><h2>WAN and LAN</h2><p>I assigned the Intel i210 interface to WAN and kept the onboard Realtek interface on LAN. The Intel adapter had the cleaner FreeBSD support, so I preferred to put it on the untrusted side of the network.</p><h2>Validation</h2><ul><li>Confirmed OPNsense detected both interfaces.</li><li>Checked link state and negotiation.</li><li>Verified the WAN interface received an address.</li><li>Verified LAN addressing and management access.</li></ul><h2>Where it fits in the lab</h2><p>The main value of the build is control. It gives me a real network edge that I can configure, log, segment, and troubleshoot instead of treating the router as a black box. It also gives me a better base for future VPN, IDS, and traffic-analysis work.</p></article><aside class="sidebar"><h3>Build details</h3><dl><dt>Platform</dt><dd>Dell OptiPlex 3070 SFF</dd><dt>Firewall OS</dt><dd>OPNsense</dd><dt>WAN NIC</dt><dd>Intel i210 / igb</dd><dt>LAN NIC</dt><dd>Onboard Realtek</dd><dt>Purpose</dt><dd>Dedicated home network edge</dd></dl></aside></div></main>
+<footer class="footer"><div class="container"><span>© 2026 Darrin Jackson</span><span class="mono">cybersecurity · networking · systems</span></div></footer>
+<script src="/assets/js/site.js"></script></div></body></html>

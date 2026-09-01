@@ -1,199 +1,56 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Darrin Jackson | Cybersecurity Portfolio</title>
-<link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
-  <style>
-    @font-face {
-      font-family: 'Molot';
-      src: url('/fonts/molot.otf') format('opentype');
-      font-weight: normal;
-      font-style: normal;
-    }
-    body {
-      font-family: 'Fira Code', monospace;
-      background-color: #0a0a0a;
-      color: #e0e0e0;
-      margin: 0;
-      padding: 0;
-    }
-    header, footer {
-      background-color: #111;
-      padding: 1rem;
-      text-align: center;
-    }
-    nav a {
-      margin: 0 1rem;
-      color: #a962e8;
-      text-decoration: none;
-      padding: 0.75rem 1rem; 
-      font-size: 1.1rem;     
-    }
-    main {
-      padding: 2rem;
-      max-width: 800px;
-      margin: auto;
-    }
-    h1, h2 {
-      font-family: 'Molot', 'Fira Code', monospace;
-      color: #a962e8;
-    }
-    nav {
-      display: flex;
-      justify-content: center;
-      background-color: #111;
-      font-size: 1.1rem;
-      gap: 2rem;       
-      padding: 1rem;   
-    }
-  
-  .dropdown {
-    position: relative;
-    display: inline-block;
-    }
-  
-  .dropdown-content {
-    display: none;
-    position: absolute;
-    background-color: #222;
-    min-width: 160px;
-    z-index: 1;
-    text-align: left;
-    border: 1px solid #333;
-    }
-  
-  .dropdown-content a {
-    color: #a962e8;
-    padding: 0.75rem 1rem;
-    font-size: 1rem;
-    display: block;
-    text-decoration: none;
-    }
-  
-  .dropdown-content a:hover {
-    background-color: #333;
-    }
-  
-    .dropdown .dropdown-content {
-    display: none;
-  }
-  
-  .dropdown.open .dropdown-content {
-    display: block;
-  }
-
-@media (max-width: 768px) {
-  nav {
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .dropdown-content {
-    position: static;       /* stack vertically instead of absolute */
-    border: none;
-    box-shadow: none;
-  }
-
-  .dropdown:hover .dropdown-content {
-    display: block;
-  }
-
-  nav a, .dropdown-content a {
-    width: 100%;
-    text-align: center;
-  }
-  .nav-item {
-    display: inline-block;
-    position: relative;
-    padding: 0.75rem 1rem;
-  }
-
-}
-
-
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Darrin Jackson — cybersecurity portfolio covering penetration testing, vulnerability research, homelab projects, networking, and technical writeups.">
+<title>Darrin Jackson | Cybersecurity Portfolio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/css/site.css">
 </head>
-<body>
-  <header>
-    <h1>Darrin Jackson</h1>
-<nav>
-  <div class="nav-item">
-    <a href="/">Home</a>
+<body><div class="shell">
+<header class="topbar"><nav class="nav">
+<a class="brand" href="/"><span class="brand-name">Darrin Jackson</span><span class="brand-sub">portfolio</span></a>
+<div class="navlinks"><a data-nav href="/work/">Work</a><a data-nav href="/research/">Writeups</a><a data-nav href="/lab/">Lab</a><a data-nav href="/about/">About</a></div>
+</nav></header>
+<main class="container">
+<section class="hero">
+  <div class="panel hero-main">
+    <div class="kicker">Cybersecurity · networking · systems</div>
+    <h1>Welcome</h1>
+    <p class="hero-role">Security Analyst</p>
+    <p class="lede">I work in cybersecurity and IT, and this is where I keep the technical work I want to be able to point back to: vulnerability research, penetration-testing writeups, homelab builds, scripts, and other projects I learn from. My background is mostly systems and networking, with more recent professional and personal experience in security. I hope to share more here as I continue to grow.</p>
+    <div class="actions"><a class="btn primary" href="/research/">Read the writeups →</a><a class="btn" href="/lab/">See the lab</a><a class="btn" href="/about/">More about me</a></div>
   </div>
-
-  <div class="dropdown">
-    <a href="#">Projects</a>
-    <div class="dropdown-content">
-      <a href="/builds/">Builds &#11146</a> <!--build this dir-->
-      <a href="/scripts/">Scripts &#11146</a> <!--build this dir-->
-      <a href="/projects/">Homelab & Network &#11146</a>
+  <aside class="panel status">
+    <div class="panel-head"><span>A Quick Overview</span><span class="dot"></span></div>
+    <div class="status-list">
+      <div class="status-row"><span class="label">Day job</span><span class="value">Security Analyst in an MSP environment, with plenty of systems and network work mixed in.</span></div>
+      <div class="status-row"><span class="label">Recent focus</span><span class="value">Improving my penetration testing methodology, enumeration, and reporting, and shifting more of my offensive security focus toward Active Directory.</span></div>
+      <div class="status-row"><span class="label">Also exploring</span><span class="value">DFIR, threat intelligence, OSINT, and threat hunting.</span></div>
+      <div class="status-row"><span class="label">Recent cert</span><span class="value">HTB Certified Penetration Testing Specialist (CPTS).</span></div>
     </div>
+  </aside>
+</section>
+
+<section class="section">
+  <div class="section-head"><div><div class="kicker">What's here</div><h2>The site is split into four parts.</h2></div></div>
+  <div class="site-map">
+    <a class="site-link" href="/research/"><div class="number">01</div><h3>Writeups</h3><p>Vulnerability research, technical notes, and lab write-ups.</p><span class="go">→</span></a>
+    <a class="site-link yellow" href="/lab/"><div class="number">02</div><h3>Lab & projects</h3><p>Networking, defensive tooling, and other things I have built at home.</p><span class="go">→</span></a>
+    <a class="site-link orange" href="/work/"><div class="number">03</div><h3>Work</h3><p>Selected technical work and practical problem solving.</p><span class="go">→</span></a>
+    <a class="site-link red" href="/about/"><div class="number">04</div><h3>About</h3><p>My background, current security work, certifications, and where I am trying to take my career next.</p><span class="go">→</span></a>
   </div>
+</section>
 
-  <div class="dropdown">
-    <a href="#">Writeups</a>
-    <div class="dropdown-content">
-      <a href="/writeups/">Vuln Discoveries/CVEs &#11146</a>
-      <a href="/reports/">Professional Reports &#11146</a> <!--build this dir-->
-      <a href="/ctfs/">CTFs &#11146</a>
-    </div>
-  </div>
-
-  <div class="dropdown">
-    <a href="#">About Me</a>
-    <div class="dropdown-content">
-      <a href="/certifications/">Credentials &#11146</a>
-      <a href="/resume/">Resume &#11146</a>
-      <a href="/contact/">Contact &#11146</a>
-    </div>
-  </div>
-</nav>
-    
-  </header>
-<main>
-  <h2>Cybersecurity Portfolio</h2>
-  <p style="font-size: 1rem; line-height: 1.6;">
-   My name is Darrin Jackson, and welcome to my portfolio.I am a cybersecurity specialist with a strong foundation in technical support, system analysis, and network security. This portfolio serves as a central hub for documenting my work, tracking my progress, and showcasing key projects, reports, and credentials as I continue to grow in the field.
-  </p>
-
-  <hr style="margin: 2rem 0; border-color: #333;">
-
-  <h3>Projects</h3>
-  <p style="font-size: 0.95rem; line-height: 1.6;">
-    This section is a collection of hands-on builds, tools, scripts, and homelab experiments. These projects reflect my interest in system design, automation, hardware testing, and security tooling. Each entry includes a breakdown of the project's design, implementation, and the experience gained through building it.
-  </p>
-
-  <h3>Writeups</h3>
-  <p style="font-size: 0.95rem; line-height: 1.6;">
-    This section consists of technical writeups detailing real-world vulnerability discoveries, professional reporting, and Capture The Flag (CTF) challenge breakdowns. This section highlights my ability to analyze systems, document findings clearly, and approach security from a practical perspective.
-  </p>
-
-  <h3>About Me</h3>
-  <p style="font-size: 0.95rem; line-height: 1.6;">
-    This section offers a snapshot of my professional experience and direction, including credentials, ertifications, my resume, and contact information for those interested in collaboration or recruitment.
-  </p>
+<section class="section">
+  <div class="section-head"><div><div class="kicker">Recent updates</div><h2>The newest things I've added.</h2></div></div>
+  <div id="recent-updates" class="updates-grid"><noscript>Recent updates require JavaScript to render.</noscript></div>
+</section>
 </main>
-
-  <footer>
-    &copy; 2026 Darrin Jackson
-  </footer>
-<script>
-  document.querySelectorAll('.dropdown > a').forEach(link => {
-    link.addEventListener('click', function (e) {
-      e.preventDefault();
-      const open = this.parentElement.classList.contains('open');
-      
-      // Close all dropdowns first
-      document.querySelectorAll('.dropdown').forEach(drop => drop.classList.remove('open'));
-
-      // Open clicked one if it wasn't already open
-      if (!open) {
-        this.parentElement.classList.add('open');
-      }
-    });
-  });
-</script>
-</body>
-</html>
+<footer class="footer"><div class="container"><span>© 2026 Darrin Jackson</span></div></footer>
+<script src="/assets/js/recent-updates.js"></script>
+<script src="/assets/js/site.js"></script>
+</div></body></html>

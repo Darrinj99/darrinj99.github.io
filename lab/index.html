@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Darrin Jackson homelab projects covering networking, DNS, VPNs, firewalls, and security testing.">
+<title>Lab | Darrin Jackson</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/css/site.css">
+</head>
+<body><div class="shell">
+<header class="topbar"><nav class="nav">
+<a class="brand" href="/"><span class="brand-name">Darrin Jackson</span><span class="brand-sub">portfolio</span></a>
+<div class="navlinks">
+<a data-nav href="/work/">Work</a><a data-nav href="/research/">Writeups</a><a data-nav href="/lab/">Lab</a><a data-nav href="/about/">About</a>
+</div></nav></header>
+<main class="container">
+<header class="page-head">
+  <div class="kicker">Lab</div>
+  <h1>My homelab and projects.</h1>
+  <p>A lot of what I know about systems and networking came from building things at home, breaking them, and fixing them. This section is where I keep those projects, including network infrastructure, defensive tools, remote access, and security experiments.</p>
+</header>
+<div class="grid">
+<a class="card" href="/lab/opnsense-router.html"><div class="eyebrow">Networking</div><h3>OPNsense router / firewall</h3><p>A dedicated router and firewall I built on repurposed Dell hardware, including NIC selection and WAN/LAN separation.</p><div class="tags"><span class="tag">OPNsense</span><span class="tag">FreeBSD</span><span class="tag">routing</span></div></a>
+<a class="card" href="/lab/dns-sinkhole.html"><div class="eyebrow">DNS</div><h3>Pi-hole DNS sinkhole</h3><p>Network-level DNS filtering and visibility with an encrypted upstream resolver path.</p><div class="tags"><span class="tag">Pi-hole</span><span class="tag">DNS</span><span class="tag">dnscrypt-proxy</span></div></a>
+<a class="card" href="/lab/wireguard.html"><div class="eyebrow">Remote access</div><h3>WireGuard gateway</h3><p>VPN access into my homelab without directly publishing internal management services.</p><div class="tags"><span class="tag">WireGuard</span><span class="tag">routing</span><span class="tag">VPN</span></div></a>
+<a class="card" href="/lab/c2-lab.html"><div class="eyebrow">Security lab</div><h3>Small C2 learning project</h3><p>A basic Python and Raspberry Pi project I built to better understand beaconing, endpoint state, tasking, and the basic moving pieces behind C2.</p><div class="tags"><span class="tag">Python</span><span class="tag">Raspberry Pi</span><span class="tag">closed lab</span></div></a>
+</div></main>
+<footer class="footer"><div class="container"><span>© 2026 Darrin Jackson</span><span class="mono">cybersecurity · networking · systems</span></div></footer>
+<script src="/assets/js/site.js"></script></div></body></html>
