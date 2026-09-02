@@ -243,9 +243,9 @@
   </div>
 
   <div class="actions">
-    <a class="btn primary" href="mailto:darrinj99@gmail.com">
-      Email
-    </a>
+    <button class="btn primary" type="button" onclick="copyEmail(this)">
+      Copy Email (darrinj99@gmail.com)
+    </button>
 
     <a class="btn"
        href="https://github.com/darrinj99"
@@ -266,4 +266,17 @@
 </main>
 
 <footer class="footer"><div class="container"><span>© 2026 Darrin Jackson</span></div></footer>
+
+<script>
+function copyEmail(button) {
+  navigator.clipboard.writeText("darrinj99@gmail.com");
+
+  const originalText = button.textContent;
+  button.textContent = "Email Copied";
+
+  setTimeout(() => {
+    button.textContent = originalText;
+  }, 2000);
+}
+</script>
 <script src="/assets/js/site.js"></script></div></body></html>
