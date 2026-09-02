@@ -16,14 +16,92 @@
 <div class="navlinks">
 <a data-nav href="/work/">Work</a><a data-nav href="/research/">Writeups</a><a data-nav href="/lab/">Lab</a><a data-nav href="/about/">About</a>
 </div></nav></header>
+
 <main class="container">
 <header class="page-head">
   <div class="kicker">Writeups</div>
   <h1>Writeups and technical notes.</h1>
   <p>This is where I keep vulnerability research, penetration-testing writeups, lab notes, and other technical work that I have cleaned up enough to publish.</p>
 </header>
-<div class="list">
-<a class="list-item" href="/writeups/kiloview_e3.html"><div class="type">CVE / disclosure</div><div><h3>Unauthenticated factory reset vulnerability in Kiloview E3</h3><p>How I found the endpoint, validated the behavior, disclosed it to the vendor, and documented the final impact.</p></div><span class="arrow">→</span></a>
-</div></main>
+
+<section class="section">
+  <div class="section-head">
+    <div>
+      <div class="kicker">Vulnerability Research</div>
+      <h2>CVEs and vulnerability disclosures.</h2>
+      <p>Security issues I have researched, validated, documented, and responsibly disclosed.</p>
+    </div>
+  </div>
+
+  <div class="list">
+    <a class="list-item" href="/writeups/kiloview_e3.html">
+      <div class="type">CVE / disclosure</div>
+      <div>
+        <h3>Unauthenticated factory reset vulnerability in Kiloview E3</h3>
+        <p>How I found the endpoint, validated the behavior, disclosed it to the vendor, and documented the final impact.</p>
+      </div>
+      <span class="arrow">→</span>
+    </a>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-head">
+    <div>
+      <div class="kicker">Practice Labs</div>
+      <h2>Hack The Box writeups.</h2>
+      <p>Machines I worked through while building my penetration-testing methodology and preparing for CPTS. These focus on the attack path, why each technique worked, and what I took away from the box.</p>
+    </div>
+  </div>
+
+  <div class="list">
+    <a class="list-item" href="/writeups/fluffy.html">
+      <div class="type">Windows / AD</div>
+      <div>
+        <h3>Fluffy</h3>
+        <p>An internal document led me to a credential-capture foothold, which opened an Active Directory attack path through delegated permissions, service accounts, and ultimately AD CS to reach Administrator.</p>
+      </div>
+      <span class="arrow">→</span>
+    </a>
+
+    <a class="list-item" href="/writeups/jeeves.html">
+      <div class="type">Windows</div>
+      <div>
+        <h3>Jeeves</h3>
+        <p>A Jenkins instance exposed on a non-standard port gave me an initial shell. From there, a KeePass database led to Administrator access, with the final flag hidden in an alternate data stream.</p>
+      </div>
+      <span class="arrow">→</span>
+    </a>
+
+    <a class="list-item" href="/writeups/pov.html">
+      <div class="type">Windows / web</div>
+      <div>
+        <h3>POV</h3>
+        <p>A vulnerable download function exposed the application’s ASP.NET configuration and let me forge a malicious ViewState for code execution. Recovered local credentials then provided the path to SYSTEM.</p>
+      </div>
+      <span class="arrow">→</span>
+    </a>
+
+    <a class="list-item" href="/writeups/tombwatcher.html">
+      <div class="type">Windows / AD</div>
+      <div>
+        <h3>Tombwatcher</h3>
+        <p>This box was a long, BloodHound-driven Active Directory chain where each compromised account exposed the next permission to abuse, eventually leading through a restored certificate account to Domain Administrator.</p>
+      </div>
+      <span class="arrow">→</span>
+    </a>
+
+    <a class="list-item" href="/writeups/expressway.html">
+      <div class="type">Linux</div>
+      <div>
+        <h3>Expressway</h3>
+        <p>When the initial TCP scan showed almost nothing useful, UDP enumeration exposed the real path. Information from TFTP and IKE led to working SSH credentials, followed by a vulnerable sudo version for root.</p>
+      </div>
+      <span class="arrow">→</span>
+    </a>
+  </div>
+</section>
+
+</main>
 <footer class="footer"><div class="container"><span>© 2026 Darrin Jackson</span></div></footer>
 <script src="/assets/js/site.js"></script></div></body></html>

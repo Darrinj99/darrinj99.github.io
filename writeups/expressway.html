@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Hack The Box practice notes for Expressway by Darrin Jackson.">
+<title>Expressway | Writeups | Darrin Jackson</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/css/site.css">
+
+<style>
+.writeup-tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+.writeup-chip{font:600 .68rem/1 var(--mono);padding:7px 9px;border:1px solid var(--line);border-radius:999px;background:var(--panel);color:var(--text-soft)}
+.writeup-back{display:inline-flex;margin-bottom:20px;text-decoration:none;font:600 .75rem/1 var(--mono);color:var(--muted)}
+.writeup-back:hover{color:var(--text)}
+.lab-notes{max-width:900px}
+.lab-notes h1{font-size:1.85rem;letter-spacing:-.025em;margin:44px 0 16px;padding-top:6px}
+.lab-notes h2{font-size:1.35rem;margin:34px 0 13px;padding-top:6px}
+.lab-notes h3{font-size:1.08rem;margin:27px 0 10px}
+.lab-notes h4{font-size:.98rem;margin:22px 0 8px}
+.lab-notes p,.lab-notes li{color:var(--text-soft)}
+.lab-notes ul,.lab-notes ol{padding-left:24px}
+.lab-notes li+li{margin-top:5px}
+.lab-notes hr{border:0;border-top:1px solid var(--line);margin:34px 0}
+.lab-notes pre{overflow:auto;background:#08080a;border:1px solid var(--line);border-radius:7px;padding:16px;font-size:.81rem;line-height:1.55;color:#e3e3e7}
+.lab-notes code{font-family:var(--mono);color:#f2d978}
+.lab-notes pre code{color:inherit}
+.lab-notes table{width:100%;border-collapse:collapse;margin:18px 0 26px;font-size:.88rem;background:var(--panel)}
+.lab-notes th,.lab-notes td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top}
+.lab-notes th{font:600 .72rem/1.4 var(--mono);text-transform:uppercase;letter-spacing:.04em;color:var(--text-soft);background:var(--panel-2)}
+.lab-notes blockquote{margin:20px 0;padding:12px 16px;border-left:3px solid var(--purple);background:var(--purple-soft);color:var(--text-soft)}
+.lab-notes blockquote p{margin:0;color:inherit}
+.lab-notes a{color:#cbb8ff;text-underline-offset:3px}
+.source-note{margin:0 0 28px;padding:12px 14px;border:1px solid var(--line);border-radius:7px;background:var(--bg-soft);color:var(--muted);font-size:.85rem}
+@media(max-width:650px){.lab-notes table{display:block;overflow-x:auto}.lab-notes h1{font-size:1.55rem}}
+</style>
+
+</head>
+<body><div class="shell">
+<header class="topbar"><nav class="nav">
+<a class="brand" href="/"><span class="brand-name">Darrin Jackson</span><span class="brand-sub">portfolio</span></a>
+<div class="navlinks"><a data-nav href="/work/">Work</a><a data-nav href="/research/">Writeups</a><a data-nav href="/lab/">Lab</a><a data-nav href="/about/">About</a></div>
+</nav></header>
+<main class="container">
+<a class="writeup-back" href="/research/">← Back to Writeups</a>
+<header class="page-head">
+  <div class="kicker">HTB Practice Lab</div>
+  <h1>Expressway</h1>
+  <p>Original practice notes covering UDP enumeration, TFTP and IKE discovery, PSK recovery, SSH access, and local privilege escalation.</p>
+  <div class="writeup-tools"><span class="writeup-chip">Hack The Box</span><span class="writeup-chip">Linux</span></div>
+</header>
+<div class="source-note">This page is a direct HTML transfer of my original practice notes. The technical content, commands, findings, and attack path have been kept intact rather than rewritten into a different walkthrough.</div>
+<article class="article lab-notes">
+<h1 id="first-flag">First Flag</h1>
+<h2 id="recon-and-enumeration">Recon and Enumeration</h2>
+<ul>
+<li><p>The target IP is 10.129.5.230, so I began my recon with nmap.</p></li>
+<li><p>The first command I ran is as follows:</p>
+<ul>
+<li>nmap -sV -A -O -Pn 10.129.5.230</li>
+</ul></li>
+<li><p>This command resulted in the following: ```Starting Nmap 7.95 ( <a href="https://nmap.org">https://nmap.org</a> ) at 2026-01-15 13:19 EST Nmap scan report for 10.129.5.230 Host is up (0.044s latency). Not shown: 999 closed tcp ports (reset) PORT STATE SERVICE VERSION 22/tcp open ssh OpenSSH 10.0p2 Debian 8 (protocol 2.0) Device type: general purpose Running: Linux 4.X|5.X OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5 OS details: Linux 4.15 - 5.19 Network Distance: 2 hops Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel</p>
+<pre><code>  TRACEROUTE (using port 993/tcp)
+  HOP RTT      ADDRESS
+  1   45.81 ms 10.10.14.1
+  2   46.17 ms 10.129.5.230
+  ```</code></pre></li>
+<li><p>A single SSH service does not seem like a feasible path to gain a foothold. So I ran nmap -p- 10.129.5.230 to try to discover any other ports.</p></li>
+<li><p>This scan resulted in the same results as before, but I have not scanned for any UDP ports, so I will follow up on a scan for that.</p></li>
+<li><p>The next command I ran was to find UDP ports:</p>
+<ul>
+<li>nmap -sV -sU 10.129.5.230</li>
+</ul></li>
+<li><p>and that command resulting in the following: ```PORT STATE SERVICE VERSION 68/udp open|filtered dhcpc 69/udp open tftp Netkit tftpd or atftpd 199/udp open|filtered smux 500/udp open isakmp? 1023/udp open|filtered unknown 4500/udp open|filtered nat-t-ike 19632/udp open|filtered unknown 49194/udp open|filtered unknown</p></li>
+<li><p>The first service, [[tftp]], seemed liked a good starting place. So I read more into the service</p></li>
+<li><p>After reading about service, it seems there are no commands to navigate the file system. So I went back to reading about ways to exploit [[tftp]]</p></li>
+<li><p>I referred to <a href="https://hackviser.com/tactics/pentesting/services/tftp">hackviser</a> which had a list of tactics to enumerate and exploit tftp.</p></li>
+<li><p>Within this page was a specific nmap command to enum files within tftp:</p>
+<ul>
+<li>nmap -sU -p 69 --script tftp-enum 10.129.5.230</li>
+</ul></li>
+<li><p>This command found a file called "ciscortr.cfg", which is a default config file for cisco devices.</p></li>
+<li><p>Running grep 'password' on this file resulted in the following: <code>no service password-encryption enable password ***** username ike password ***** key secret-password group 2 key secret-password password ***** password *****</code></p></li>
+<li><p>This reveals a user named 'ike', but not much else to work with.</p></li>
+<li><p>I pivoted focus to port 500 because it is the only other open port on the UDP scan.</p></li>
+<li><p>I read about the service [[isakmp]] on <a href="https://angelica.gitbook.io/hacktricks/network-services-pentesting/ipsec-ike-vpn-pentesting">angelica.github.io</a></p></li>
+<li><p>This taught me about what isakmp is and some basic enumeration and exploitation of the service.</p></li>
+<li><p>Following the website's enumeration tactics, i ran the following command:</p>
+<ul>
+<li>ike-scan -M -A 10.129.5.230</li>
+</ul></li>
+<li><p>This command resulting in the following: <code>HDR=(CKY-R=5dcb4160bcc7a644) SA=(Enc=3DES Hash=SHA1 Group=2:modp1024 Auth=PSK LifeType=Seconds LifeDuration=28800) KeyExchange(128 bytes) Nonce(32 bytes) ID(Type=ID_USER_FQDN, Value=ike@expressway.htb) VID=09002689dfd6b712 (XAUTH) VID=afcad71368a1f1c96b8696fc77570100 (Dead Peer Detection v1.0) Hash(20 bytes)</code></p></li>
+<li><p>This response gave me a lot of valuable information. Including the hashing algorithm (SHA1), the authentication type (pre-shared key) and a user (<a href="mailto:ike@expressway.htb">ike@expressway.htb</a>).</p></li>
+<li><p>I did more reading about the ike-scan tool, and learned that if you have the user information, you can initiate a handshake that has the hash of the password.</p></li>
+<li><p>So i ran the following command to attempt to grab a hash:</p>
+<ul>
+<li>ike-scan -M -A -n <a href="mailto:ike@expressway.htb">ike@expressway.htb</a> --pskcrack=expressway_hash.txt 10.129.5.230</li>
+</ul></li>
+<li><p>That command resulted in a hash value saved to expressway_hash.txt</p></li>
+<li><p>I first ran the hash through hashcat but the resulted password would not grant me access, so I opted for psk-crack instead.</p>
+<ul>
+<li>psk-crack -d /usr/share/wordlists/rockyou.txt expressway_hash.txt</li>
+</ul></li>
+<li><p>This got me the following password:</p>
+<ul>
+<li>freakingrockstarontheroad</li>
+</ul></li>
+<li><p>Using the credentials ike/freakingrockstarontheroad, I was able to SSH into the machine.</p></li>
+<li><p>And in the home dir was a file called user.txt that had the first flag in it.</p></li>
+</ul>
+<h1 id="second-flag">Second Flag</h1>
+<p>This flag took me a couple days to find, I had to do a lot of researching on figuring out what I need to look for and what i can exploit.</p>
+<p>After some digging, I found a possible avenue of attack on the specific version of sudo installed on the target machine</p>
+<p>Running dpkg -s sudo resulted in: <code>Package: sudo Status: hold ok installed Priority: optional Section: admin Installed-Size: 6054 Maintainer: Sudo Maintainers &lt;sudo@packages.debian.org&gt; Architecture: amd64 Version: 1.9.13p3-1+deb12u1 Replaces: sudo-ldap Depends: libaudit1 (&gt;= 1:2.2.1), libc6 (&gt;= 2.34), libpam0g (&gt;= 0.99.7.1), libselinux1 (&gt;= 3.1~), zlib1g (&gt;= 1:1.2.0.2), libpam-modules Pre-Depends: init-system-helpers (&gt;= 1.54~) Conflicts: sudo-ldap Conffiles: /etc/init.d/sudo 4fd40c92739a3bb2242df7cc6af126df /etc/pam.d/sudo 7fa5090826481c517f23faa1e21c77a8 /etc/pam.d/sudo-i 95199b1f3d5a60bcf98058d9f8b70e70 /etc/sudo.conf 8c714b777580faea54a2eb6d5f17ad1d /etc/sudo_logsrvd.conf ad0ba586da300ae3ba46312ad744a6e2 /etc/sudoers da8bee36494c904ba767f0dd58920878 /etc/sudoers.d/README 44c75ff004a18eeefdde4c998914d6d3 Description: Provide limited super user privileges to specific users Sudo is a program designed to allow a sysadmin to give limited root privileges to users and log root activity.  The basic philosophy is to give as few privileges as possible but still allow people to get their work done. . This version is built with minimal shared library dependencies, use the sudo-ldap package instead if you need LDAP support for sudoers. Homepage: https://www.sudo.ws/</code> This sudo version has a known vulnerability</p>
+<h3 id="cve-2025-32463-detail">CVE-2025-32463 Detail</h3>
+<pre><code>```Sudo before 1.9.17p1 allows local users to obtain root access because /etc/nsswitch.conf from a user-controlled directory is used with the --chroot option.
+```</code></pre>
+<p>So i looked into exploits for this vulnerability and found a script that exploits this vuln at <a href="https://www.exploit-db.com/exploits/52352">https://www.exploit-db.com/exploits/52352</a></p>
+<p>creating that script within the ssh shell elevated my shell to root@expressway</p>
+<p>with that i navigated to the /root directory, and within that directory is a single file called root.txt, which was the second flag</p>
+
+</article>
+</main>
+<footer class="footer"><div class="container"><span>© 2026 Darrin Jackson</span></div></footer>
+<script src="/assets/js/site.js"></script></div></body></html>
